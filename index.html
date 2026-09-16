@@ -3,18 +3,34 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Google Tag Manager -->
+    <!-- Google Tag Manager (deferred until idle/interaction) -->
     <script>
-      (function (w, d, s, l, i) {
-        w[l] = w[l] || [];
-        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
-        var f = d.getElementsByTagName(s)[0];
-        var j = d.createElement(s);
-        var dl = l != "dataLayer" ? "&l=" + l : "";
-        j.async = true;
-        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
-        f.parentNode.insertBefore(j, f);
-      })(window, document, "script", "dataLayer", "GTM-W489C435");
+      window.dataLayer = window.dataLayer || [];
+      (function () {
+        var loaded = false;
+        function loadGtm() {
+          if (loaded) return;
+          loaded = true;
+          (function (w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+            var f = d.getElementsByTagName(s)[0];
+            var j = d.createElement(s);
+            var dl = l != "dataLayer" ? "&l=" + l : "";
+            j.async = true;
+            j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+            f.parentNode.insertBefore(j, f);
+          })(window, document, "script", "dataLayer", "GTM-W489C435");
+        }
+        ["scroll", "click", "touchstart", "keydown"].forEach(function (evt) {
+          window.addEventListener(evt, loadGtm, { once: true, passive: true });
+        });
+        if ("requestIdleCallback" in window) {
+          requestIdleCallback(loadGtm, { timeout: 4000 });
+        } else {
+          setTimeout(loadGtm, 3500);
+        }
+      })();
     </script>
     <!-- End Google Tag Manager -->
     <title>Taldo Studio 3D | Bonecos, Chaveiros e Impressão 3D em São Paulo</title>
@@ -45,7 +61,12 @@
       name="twitter:description"
       content="Personagens, mascotes, chaveiros e peças sob encomenda em impressão 3D."
     >
-    <link rel="preconnect" href="https://wa.me">
+    <link
+      rel="preload"
+      as="image"
+      href="assets/products/nome-personalizado-joana.webp"
+      fetchpriority="high"
+    >
     <link rel="stylesheet" href="styles.css">
     <script type="application/ld+json">
       {
@@ -153,6 +174,7 @@
                 width="920"
                 height="720"
                 fetchpriority="high"
+                decoding="async"
               >
             </figure>
             <figure class="hero-photo hero-photo-small top">
@@ -161,6 +183,8 @@
                 alt="Chaveiros coloridos personalizados em formato de copos"
                 width="720"
                 height="720"
+                loading="lazy"
+                decoding="async"
               >
             </figure>
             <figure class="hero-photo hero-photo-small bottom">
@@ -169,6 +193,8 @@
                 alt="Suporte organizador verde produzido sob encomenda"
                 width="720"
                 height="720"
+                loading="lazy"
+                decoding="async"
               >
             </figure>
           </div>
@@ -190,42 +216,42 @@
             <div class="brands-marquee-track">
               <ul class="brands-marquee-list">
                 <li class="brands-marquee-item">
-                  <img src="assets/brands/edame.png" alt="Edamê" width="140" height="40" loading="lazy">
+                  <img src="assets/brands/edame.webp" alt="Edamê" width="140" height="40" loading="lazy">
                 </li>
                 <li class="brands-marquee-item">
                   <img src="assets/brands/faditech.webp" alt="Faditech" width="180" height="56" loading="lazy">
                 </li>
                 <li class="brands-marquee-item">
-                  <img src="assets/brands/otom.png" alt="Otom" class="is-on-black" width="120" height="120" loading="lazy">
+                  <img src="assets/brands/otom.webp" alt="Otom" class="is-on-black" width="120" height="120" loading="lazy">
                 </li>
                 <li class="brands-marquee-item" aria-hidden="true">
-                  <img src="assets/brands/edame.png" alt="" width="140" height="40" loading="lazy">
+                  <img src="assets/brands/edame.webp" alt="" width="140" height="40" loading="lazy">
                 </li>
                 <li class="brands-marquee-item" aria-hidden="true">
                   <img src="assets/brands/faditech.webp" alt="" width="180" height="56" loading="lazy">
                 </li>
                 <li class="brands-marquee-item" aria-hidden="true">
-                  <img src="assets/brands/otom.png" alt="" class="is-on-black" width="120" height="120" loading="lazy">
+                  <img src="assets/brands/otom.webp" alt="" class="is-on-black" width="120" height="120" loading="lazy">
                 </li>
               </ul>
               <ul class="brands-marquee-list" aria-hidden="true">
                 <li class="brands-marquee-item">
-                  <img src="assets/brands/edame.png" alt="" width="140" height="40" loading="lazy">
+                  <img src="assets/brands/edame.webp" alt="" width="140" height="40" loading="lazy">
                 </li>
                 <li class="brands-marquee-item">
                   <img src="assets/brands/faditech.webp" alt="" width="180" height="56" loading="lazy">
                 </li>
                 <li class="brands-marquee-item">
-                  <img src="assets/brands/otom.png" alt="" class="is-on-black" width="120" height="120" loading="lazy">
+                  <img src="assets/brands/otom.webp" alt="" class="is-on-black" width="120" height="120" loading="lazy">
                 </li>
                 <li class="brands-marquee-item">
-                  <img src="assets/brands/edame.png" alt="" width="140" height="40" loading="lazy">
+                  <img src="assets/brands/edame.webp" alt="" width="140" height="40" loading="lazy">
                 </li>
                 <li class="brands-marquee-item">
                   <img src="assets/brands/faditech.webp" alt="" width="180" height="56" loading="lazy">
                 </li>
                 <li class="brands-marquee-item">
-                  <img src="assets/brands/otom.png" alt="" class="is-on-black" width="120" height="120" loading="lazy">
+                  <img src="assets/brands/otom.webp" alt="" class="is-on-black" width="120" height="120" loading="lazy">
                 </li>
               </ul>
             </div>
@@ -437,7 +463,8 @@
               alt="Mario Bros produzido em impressão 3D personalizada"
               width="900"
               height="1200"
-              fetchpriority="high"
+              loading="lazy"
+              decoding="async"
             >
             <figcaption>Mario Bros</figcaption>
           </figure>
@@ -617,7 +644,8 @@
               alt="Chaveiro azul personalizado produzido em impressão 3D"
               width="720"
               height="720"
-              fetchpriority="high"
+              loading="lazy"
+              decoding="async"
             >
             <figcaption>Chaveiro personalizado azul</figcaption>
           </figure>
@@ -725,7 +753,8 @@
               alt="Chaveiro escudo do Flamengo produzido em impressão 3D"
               width="900"
               height="1200"
-              fetchpriority="high"
+              loading="lazy"
+              decoding="async"
             >
             <figcaption>Chaveiro escudo do Flamengo</figcaption>
           </figure>
