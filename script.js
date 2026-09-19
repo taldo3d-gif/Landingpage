@@ -1,6 +1,9 @@
 (function () {
   const PROMO_POPUP_STORAGE_KEY = "taldo-promo-popup-seen";
   const PROMO_POPUP_DELAY_MS = 2500;
+  const DOUBT_BUBBLE_STORAGE_KEY = "taldo-doubt-bubble-dismissed";
+  const DOUBT_BUBBLE_DELAY_MS = 15 * 60 * 1000;
+  const DOUBT_BUBBLE_TEST_DELAY_MS = 2000;
   const WHATSAPP_BASE = "https://wa.me/5511910634551?text=";
   const WHATSAPP_10 =
     "Olá! Vim pelo site e quero usar meu desconto de 10% na primeira compra.";
@@ -259,6 +262,125 @@
       });
     });
   });
+
+  const doubtBubble = document.getElementById("doubt-bubble");
+
+  if (doubtBubble) {
+    const doubtClose = doubtBubble.querySelector(".doubt-bubble-close");
+    const doubtCta = doubtBubble.querySelector(".doubt-bubble-cta");
+    let doubtTimerId = null;
+    let doubtShownTracked = false;
+    let doubtReady = false;
+
+    function isDoubtTestMode() {
+      const flag = getUrlParam("doubt_bubble");
+      return flag === "1" || flag === "true";
+    }
+
+    function getDoubtDelayMs() {
+      const customMs = Number(getUrlParam("doubt_ms"));
+      if (Number.isFinite(customMs) && customMs >= 0) {
+        return customMs;
+      }
+      return isDoubtTestMode() ? DOUBT_BUBBLE_TEST_DELAY_MS : DOUBT_BUBBLE_DELAY_MS;
+    }
+
+    function wasDoubtDismissed() {
+      if (isDoubtTestMode()) {
+        return false;
+      }
+      try {
+        return window.sessionStorage.getItem(DOUBT_BUBBLE_STORAGE_KEY) === "1";
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function markDoubtDismissed() {
+      try {
+        window.sessionStorage.setItem(DOUBT_BUBBLE_STORAGE_KEY, "1");
+      } catch (error) {
+        // Ignore storage errors in private mode or restricted browsers.
+      }
+    }
+
+    function isPromoPopupOpen() {
+      return Boolean(promoPopup && !promoPopup.hidden);
+    }
+
+    function hideDoubtBubble(markAsSeen) {
+      if (doubtTimerId !== null) {
+        window.clearTimeout(doubtTimerId);
+        doubtTimerId = null;
+      }
+      doubtBubble.hidden = true;
+      doubtBubble.setAttribute("aria-hidden", "true");
+      if (markAsSeen) {
+        markDoubtDismissed();
+        doubtReady = false;
+      }
+    }
+
+    function showDoubtBubble() {
+      if (wasDoubtDismissed() || isPromoPopupOpen() || !doubtBubble.hidden) {
+        return;
+      }
+
+      doubtBubble.hidden = false;
+      doubtBubble.setAttribute("aria-hidden", "false");
+
+      if (!doubtShownTracked) {
+        doubtShownTracked = true;
+        trackEvent("whatsapp_doubt_bubble_shown", {
+          cta_label: "bolha-duvida-15min",
+          delay_ms: String(getDoubtDelayMs()),
+        });
+      }
+    }
+
+    function syncDoubtBubbleVisibility() {
+      if (wasDoubtDismissed() || !doubtReady) {
+        return;
+      }
+
+      if (isPromoPopupOpen()) {
+        if (!doubtBubble.hidden) {
+          doubtBubble.hidden = true;
+          doubtBubble.setAttribute("aria-hidden", "true");
+        }
+        return;
+      }
+
+      showDoubtBubble();
+    }
+
+    function scheduleDoubtBubble() {
+      if (wasDoubtDismissed()) {
+        return;
+      }
+
+      doubtTimerId = window.setTimeout(function () {
+        doubtReady = true;
+        syncDoubtBubbleVisibility();
+      }, getDoubtDelayMs());
+    }
+
+    if (doubtClose) {
+      doubtClose.addEventListener("click", () => hideDoubtBubble(true));
+    }
+
+    if (doubtCta) {
+      doubtCta.addEventListener("click", () => {
+        markDoubtDismissed();
+        trackEvent("whatsapp_doubt_click", {
+          cta_label: "bolha-duvida-15min",
+        });
+      });
+    }
+
+    window.setInterval(syncDoubtBubbleVisibility, 800);
+    scheduleDoubtBubble();
+  }
 
   bindLeadForm(document.getElementById("lead-form"), {
     statusId: "lead-form-status",
