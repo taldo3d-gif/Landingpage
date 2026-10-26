@@ -15,11 +15,12 @@ Padrão: **2 adultos**. Português do Brasil.
 ## O que mostrar (e só isso)
 
 - Lista de preços (valor, cia se houver, horário se houver)
-- Links de compra **somente**:
-  - Google Flights
-  - Decolar
-  - Kayak
-  - Skyscanner
+- Links de compra **somente** (nessa ordem — páginas que já mostram preço):
+  1. Decolar
+  2. Kayak
+  3. Skyscanner
+  4. Google Flights (por último; às vezes abre busca vazia)
+- Oriente a abrir **Decolar ou Kayak** primeiro pra ver os valores na tela.
 
 ## Não mostrar
 

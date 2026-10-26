@@ -16,7 +16,7 @@ function money(price: number, currency: string): string {
 
 export default defineTool({
   description:
-    "Search prices and return ONLY safe buy options: price values + Google Flights / Decolar / Kayak / Skyscanner links. Paste chatMarkdown in the reply.",
+    "Search prices and return ONLY safe buy options with priced result pages: Decolar, Kayak, Skyscanner (Google Flights last).",
   effect: "read",
   inputSchema: z.object({
     origin: z.string().min(3).max(3),
@@ -65,11 +65,11 @@ export default defineTool({
       "Valores encontrados:",
       ...priceLines,
       "",
-      "Onde comprar com segurança:",
-      `- Google Flights: ${result.links.googleFlights}`,
+      "Onde comprar (abra estes — a lista já vem com preço):",
       `- Decolar: ${result.links.decolar}`,
       `- Kayak: ${result.links.kayak}`,
       `- Skyscanner: ${result.links.skyscanner}`,
+      `- Google Flights: ${result.links.googleFlights}`,
     ].join("\n");
 
     return {
@@ -79,7 +79,13 @@ export default defineTool({
       underMax,
       maxPrice: input.maxPrice ?? null,
       chatMarkdown,
-      safeBuyLinks: result.links,
+      safeBuyLinks: {
+        decolar: result.links.decolar,
+        kayak: result.links.kayak,
+        skyscanner: result.links.skyscanner,
+        googleFlights: result.links.googleFlights,
+      },
+      preferredCheckout: ["decolar", "kayak", "skyscanner"],
     };
   },
 });

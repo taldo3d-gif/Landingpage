@@ -96,11 +96,11 @@ export default defineTool({
         priceLine,
         ...topLines,
         "",
-        "Onde comprar:",
-        `Google Flights: ${search.links.googleFlights}`,
+        "Onde comprar (com preco na pagina):",
         `Decolar: ${search.links.decolar}`,
         `Kayak: ${search.links.kayak}`,
         `Skyscanner: ${search.links.skyscanner}`,
+        `Google Flights: ${search.links.googleFlights}`,
       ]
         .filter(Boolean)
         .join("\n");
