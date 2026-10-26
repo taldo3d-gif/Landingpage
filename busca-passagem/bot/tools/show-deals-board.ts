@@ -1,7 +1,6 @@
 import { defineTool } from "@grok/agent-sdk/tools";
 import * as z from "zod/v4";
 import { searchPrices } from "../lib/prices.js";
-import { trustSummaryPt } from "../lib/trust.js";
 
 function money(price: number, currency: string): string {
   try {
@@ -17,7 +16,7 @@ function money(price: number, currency: string): string {
 
 export default defineTool({
   description:
-    "Search prices and return a simple inline deals table (markdown) plus trusted buy links. Primary UX is in-chat — no need to open another page.",
+    "Search prices and return ONLY safe buy options: price values + Google Flights / Decolar / Kayak / Skyscanner links. Paste chatMarkdown in the reply.",
   effect: "read",
   inputSchema: z.object({
     origin: z.string().min(3).max(3),
@@ -41,70 +40,46 @@ export default defineTool({
       maxPrice: input.maxPrice,
     });
 
-    const quotes = result.quotes.slice(0, 8);
+    const quotes = result.quotes.slice(0, 5);
     const cheapest = quotes[0] ?? null;
     const underMax =
       input.maxPrice != null && cheapest != null
         ? cheapest.price <= input.maxPrice
         : null;
 
-    const tableLines = [
-      "| # | Preço | Cia | Quando | vs teto | Comprar |",
-      "|---|-------|-----|--------|---------|---------|",
-      ...quotes.map((q, i) => {
-        const vs =
-          input.maxPrice == null
-            ? "—"
-            : q.price <= input.maxPrice
-              ? "≤ teto"
-              : "acima";
-        const when = q.departures[0] ?? "—";
-        const buy = q.deepLink ?? result.links.googleFlights;
-        return `| ${i + 1} | ${money(q.price, q.currency)} | ${q.airline ?? "—"} | ${when} | ${vs} | [abrir](${buy}) |`;
-      }),
-    ];
-
-    const compare = [
-      `[Google Flights](${result.links.googleFlights})`,
-      `[Decolar](${result.links.decolar})`,
-      `[Kayak](${result.links.kayak})`,
-      `[Skyscanner](${result.links.skyscanner})`,
-    ].join(" · ");
+    const priceLines =
+      quotes.length === 0
+        ? ["Nenhum preço encontrado."]
+        : quotes.map((q, i) => {
+            const when = q.departures[0] ? ` · ${q.departures[0]}` : "";
+            const cia = q.airline ? ` · ${q.airline}` : "";
+            return `${i + 1}. ${money(q.price, q.currency)}${cia}${when}`;
+          });
 
     const chatMarkdown = [
-      `**${input.origin.toUpperCase()}→${input.destination.toUpperCase()}** ${input.departDate}` +
-        (input.returnDate ? ` ↺ ${input.returnDate}` : " (ida)") +
+      `${input.origin.toUpperCase()} → ${input.destination.toUpperCase()} · ${input.departDate}` +
+        (input.returnDate ? ` ↺ ${input.returnDate}` : "") +
         ` · ${adults} adulto(s)` +
         (input.maxPrice != null ? ` · teto ${money(input.maxPrice, currency)}` : ""),
       "",
-      `Modo: **${result.mode === "travelpayouts" ? "preços reais (referência)" : "mock"}**`,
+      "Valores encontrados:",
+      ...priceLines,
       "",
-      ...tableLines,
-      "",
-      `Comparar também: ${compare}`,
-      "",
-      `_${result.note}_`,
+      "Onde comprar com segurança:",
+      `- Google Flights: ${result.links.googleFlights}`,
+      `- Decolar: ${result.links.decolar}`,
+      `- Kayak: ${result.links.kayak}`,
+      `- Skyscanner: ${result.links.skyscanner}`,
     ].join("\n");
 
     return {
       mode: result.mode,
-      note: result.note,
-      trustPolicy: trustSummaryPt(),
       dealCount: result.quotes.length,
       cheapest,
       underMax,
       maxPrice: input.maxPrice ?? null,
       chatMarkdown,
-      topDeals: quotes.map((q) => ({
-        price: q.price,
-        currency: q.currency,
-        airline: q.airline,
-        when: q.departures,
-        buyAt: "Google Flights / Decolar / Kayak / Skyscanner",
-        link: q.deepLink,
-      })),
-      compareLinks: result.links,
-      blockedCheckout: ["kiwi.com", "kiwifi", "aviasales checkout"],
+      safeBuyLinks: result.links,
     };
   },
 });

@@ -1,6 +1,5 @@
 import { defineTool } from "@grok/agent-sdk/tools";
 import * as z from "zod/v4";
-import { formatLinksMessage } from "../lib/buy-links.js";
 import { alertDedupeKey } from "../lib/kv-keys.js";
 import { defaultWhatsAppTo, sendWhatsAppText } from "../lib/evolution.js";
 import { searchPrices } from "../lib/prices.js";
@@ -91,14 +90,17 @@ export default defineTool({
         return `${i + 1}) ${q.price} ${q.currency} ${q.airline ?? ""} ${q.departures[0] ?? ""}`;
       });
       const text = [
-        underMax ? "Preco abaixo do teto!" : "Digest da rota",
+        underMax ? "Preco abaixo do teto" : "Atualizacao de preco",
         route,
         `Teto: ${watch.maxPrice} ${watch.currency}`,
         priceLine,
         ...topLines,
         "",
-        "Comprar so nestes sites (evite Kiwi/Kiwifi):",
-        formatLinksMessage(search.links),
+        "Onde comprar:",
+        `Google Flights: ${search.links.googleFlights}`,
+        `Decolar: ${search.links.decolar}`,
+        `Kayak: ${search.links.kayak}`,
+        `Skyscanner: ${search.links.skyscanner}`,
       ]
         .filter(Boolean)
         .join("\n");
