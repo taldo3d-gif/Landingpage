@@ -14,20 +14,20 @@ Padrão: **2 adultos**. Português do Brasil.
 
 ## Preço e links (regra dura)
 
-- `maxPrice` / teto = **total do casal** (padrão 2 adultos). Margem padrão **15%** (`marginPct`).
-- Cada item mostra **total** (= por adulto × adultos) e a **data real do voo**.
+- `maxPrice` / teto = **por pessoa** (ex.: 1500 = R$1500/adulto). Margem padrão **15%**.
+- Cada item mostra **R$/pessoa** e o **total do casal** (× adultos), mais a **data real do voo**.
 - Links Decolar/Kayak do item usam **essa mesma data** — nunca uma data genérica do pedido.
 - Se a data pedida vier vazia, a tool pode listar **datas próximas** com preço e link batendo.
 
 ## O que mostrar (e só isso)
 
-- Lista de preços (total, cia+voo, horário, data do item)
+- Lista de preços (por pessoa, total, cia+voo, horário, data do item)
 - Links de compra do item (nessa ordem):
   1. Decolar
   2. Kayak
   3. Skyscanner
   4. Google Flights (por último; às vezes abre busca vazia)
-- Oriente a abrir **Decolar ou Kayak** do item pra conferir o total na tela antes de comprar.
+- Oriente a abrir **Decolar ou Kayak** do item pra conferir o valor na tela antes de comprar.
 
 ## Não mostrar
 

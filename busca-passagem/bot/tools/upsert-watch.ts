@@ -5,7 +5,7 @@ import type { FlightWatch } from "../lib/types.js";
 
 export default defineTool({
   description:
-    "Create or update a flight price watch. maxPrice is TOTAL for all adults. marginPct allows a bit above (default 15).",
+    "Create or update a flight price watch. maxPrice is PER PERSON (e.g. 1500 = R$1500/adulto). marginPct allows a bit above (default 15).",
   effect: "idempotent",
   inputSchema: z.object({
     id: z.string().optional(),
@@ -13,7 +13,7 @@ export default defineTool({
     destination: z.string().min(3).max(3),
     departDate: z.string(),
     returnDate: z.string().nullable().optional(),
-    maxPrice: z.number().positive().describe("Total ceiling for the group"),
+    maxPrice: z.number().positive().describe("Ceiling PER PERSON (not group total)"),
     marginPct: z.number().min(0).max(50).optional().describe("Default 15"),
     flexDays: z.number().int().min(0).max(7).optional().describe("Default 0 exact date"),
     currency: z.string().min(3).max(3).optional(),

@@ -38,9 +38,10 @@ function mockQuotes(input: {
   maxPrice?: number;
   currency: string;
 }): PriceQuote[] {
+  // maxPrice is per adult
   const perAdult = Math.max(
     220,
-    Math.round(((input.maxPrice ?? 1500) / input.adults) * 0.72),
+    Math.round((input.maxPrice ?? 1500) * 0.72),
   );
   const buy = buildBuyLinks(input);
   return [
@@ -166,8 +167,8 @@ async function fetchPricesForDates(input: {
 
 /**
  * Travelpayouts Data API prices are **per adult** (cache).
- * We multiply by `adults` and build buy links for the **exact flight date**
- * of each quote — never the requested date if the fare is on another day.
+ * `maxPrice` is the ceiling **per person**. We still show group total
+ * (× adults) and build buy links for each quote’s **exact flight date**.
  */
 export async function searchPrices(input: {
   origin: string;
@@ -175,8 +176,9 @@ export async function searchPrices(input: {
   departDate: string;
   returnDate?: string | null;
   adults: number;
+  /** Ceiling per adult (not group total). */
   maxPrice?: number;
-  /** Extra headroom above maxPrice, percent. Default 15. */
+  /** Extra headroom above maxPrice per adult, percent. Default 15. */
   marginPct?: number;
   /** ± days around departDate. Default 0. */
   flexDays?: number;
@@ -189,7 +191,10 @@ export async function searchPrices(input: {
   mode: "travelpayouts" | "mock";
   links: BuyLinks;
   note: string;
+  /** Effective max per adult after margin. */
   ceiling: number | null;
+  /** ceiling × adults (what the couple pays at the cap). */
+  ceilingTotal: number | null;
   marginPct: number;
   flexDays: number;
 }> {
@@ -197,19 +202,25 @@ export async function searchPrices(input: {
   const marginPct = input.marginPct ?? 15;
   const flexDays = input.flexDays ?? 0;
   const ceiling = effectiveCeiling(input.maxPrice, marginPct);
+  const ceilingTotal = ceiling == null ? null : ceiling * adults;
   const links = buildBuyLinks({ ...input, adults });
+
+  const under = (list: PriceQuote[]) =>
+    ceiling == null
+      ? list
+      : list.filter((q) => q.pricePerAdult <= ceiling);
 
   if (!travelpayoutsConfigured()) {
     const quotes = mockQuotes({ ...input, adults });
     return {
       quotes,
-      underCeiling:
-        ceiling == null ? quotes : quotes.filter((q) => q.price <= ceiling),
+      underCeiling: under(quotes),
       nearby: [],
       mode: "mock",
       links,
       note: "TRAVELPAYOUTS_TOKEN ausente — preços mock.",
       ceiling,
+      ceilingTotal,
       marginPct,
       flexDays,
     };
@@ -251,20 +262,18 @@ export async function searchPrices(input: {
     }).slice(0, 8);
   }
 
-  const underCeiling =
-    ceiling == null ? quotes : quotes.filter((q) => q.price <= ceiling);
-
   return {
     quotes,
-    underCeiling,
+    underCeiling: under(quotes),
     nearby,
     mode: "travelpayouts",
     links,
     note:
-      `Total = tarifa/adulto × ${adults}. Cada link usa a DATA DO ITEM. ` +
-      `Teto com margem ${marginPct}%: ${ceiling ?? "—"}. ` +
-      `Confira o total na Decolar/Kayak antes de pagar (cache pode variar).`,
+      `Teto = por pessoa (margem ${marginPct}% → ${ceiling ?? "—"}/adulto). ` +
+      `Total mostrado = × ${adults}. Cada link usa a DATA DO ITEM. ` +
+      `Confira na Decolar/Kayak antes de pagar (cache pode variar).`,
     ceiling,
+    ceilingTotal,
     marginPct,
     flexDays,
   };

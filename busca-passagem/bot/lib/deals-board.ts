@@ -40,8 +40,9 @@ export function renderDealsBoardHtml(input: {
     input.mode === "travelpayouts"
       ? "Preços reais (Travelpayouts / Aviasales cache)"
       : "MODO MOCK — preços aproximados (configure TRAVELPAYOUTS_TOKEN)";
+  // maxPrice is per person
   const under = input.quotes.filter(
-    (q) => input.maxPrice == null || q.price <= input.maxPrice,
+    (q) => input.maxPrice == null || q.pricePerAdult <= input.maxPrice,
   );
   const rows = (under.length ? under : input.quotes).slice(0, 15);
 
@@ -50,14 +51,14 @@ export function renderDealsBoardHtml(input: {
       const ok =
         input.maxPrice == null
           ? ""
-          : q.price <= input.maxPrice
-            ? '<span class="ok">≤ teto</span>'
+          : q.pricePerAdult <= input.maxPrice
+            ? '<span class="ok">≤ teto/pessoa</span>'
             : '<span class="no">acima</span>';
       const buy = q.buy?.decolar ?? input.links.decolar;
       const kayak = q.buy?.kayak ?? input.links.kayak;
       return `<tr>
         <td>${i + 1}</td>
-        <td class="price">${esc(money(q.price, q.currency))}</td>
+        <td class="price">${esc(money(q.pricePerAdult, q.currency))}/pessoa<br/><small>${esc(money(q.price, q.currency))} total</small></td>
         <td>${esc(q.airline ?? "—")}${q.flightNumber ? esc(q.flightNumber) : ""}</td>
         <td>${esc(q.flightDate)} · ${esc(q.departures.join(" · ") || "—")}</td>
         <td>${ok}</td>
@@ -100,7 +101,7 @@ export function renderDealsBoardHtml(input: {
   <h1>${esc(route)}</h1>
   <p class="meta">${esc(dates)} · ${input.adults} adulto(s) · moeda ${esc(input.currency)}${
     input.maxPrice != null
-      ? ` · teto ${esc(money(input.maxPrice, input.currency))}`
+      ? ` · teto ${esc(money(input.maxPrice, input.currency))}/pessoa`
       : ""
   }</p>
   <div class="banner ${input.mode === "mock" ? "mock" : ""}">${esc(modeLabel)}</div>

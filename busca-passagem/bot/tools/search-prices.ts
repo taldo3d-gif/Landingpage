@@ -4,7 +4,7 @@ import { searchPrices } from "../lib/prices.js";
 
 export default defineTool({
   description:
-    "Search flight prices (total for all adults). Prefer show-deals-board for chat lists. Returns mode mock|travelpayouts.",
+    "Search flight prices. maxPrice is PER PERSON. Prefer show-deals-board for chat lists. Returns mode mock|travelpayouts.",
   effect: "read",
   inputSchema: z.object({
     origin: z.string().min(3).max(3),
@@ -13,7 +13,11 @@ export default defineTool({
     returnDate: z.string().nullable().optional(),
     adults: z.number().int().min(1).max(9).optional().describe("Default 2 for casal"),
     currency: z.string().min(3).max(3).optional(),
-    maxPrice: z.number().positive().optional().describe("Total ceiling for all adults"),
+    maxPrice: z
+      .number()
+      .positive()
+      .optional()
+      .describe("Ceiling PER PERSON (e.g. 1500)"),
     marginPct: z.number().min(0).max(50).optional(),
     flexDays: z.number().int().min(0).max(7).optional(),
   }),
@@ -39,6 +43,7 @@ export default defineTool({
       count: result.quotes.length,
       nearbyCount: result.nearby.length,
       ceiling: result.ceiling,
+      ceilingTotal: result.ceilingTotal,
       cheapest,
       quotes: pool.slice(0, 10).map((q) => ({
         price: q.price,
@@ -55,7 +60,7 @@ export default defineTool({
       buyLinks: result.links,
       underMax:
         result.ceiling != null && cheapest != null
-          ? cheapest.price <= result.ceiling
+          ? cheapest.pricePerAdult <= result.ceiling
           : null,
     };
   },

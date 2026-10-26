@@ -7,7 +7,7 @@ import { listWatches } from "../lib/watches.js";
 
 export default defineTool({
   description:
-    "Scan active watches, find cheap quotes (total × adults, with margin), WhatsApp buy links for the SAME flight date when price ≤ ceiling.",
+    "Scan active watches, find cheap quotes (maxPrice is PER PERSON + margin), WhatsApp buy links for the SAME flight date when $/pessoa ≤ ceiling.",
   effect: "write",
   inputSchema: z.object({
     forceNotify: z
@@ -57,14 +57,17 @@ export default defineTool({
       const pool =
         search.quotes.length > 0 ? search.quotes : search.nearby;
       const cheapest = pool[0] ?? null;
+      // Ceiling is per person
       const underMax =
-        cheapest != null && ceiling != null && cheapest.price <= ceiling;
+        cheapest != null &&
+        ceiling != null &&
+        cheapest.pricePerAdult <= ceiling;
 
       if (!underMax && !forceNotify) {
         scanned.push({
           watchId: watch.id,
           mode: search.mode,
-          cheapest: cheapest?.price ?? null,
+          cheapest: cheapest?.pricePerAdult ?? null,
           ceiling,
           underMax: false,
           skipped: "above_max",
@@ -73,13 +76,13 @@ export default defineTool({
       }
 
       if (cheapest && underMax) {
-        const dedupe = alertDedupeKey(watch.id, cheapest.price);
+        const dedupe = alertDedupeKey(watch.id, cheapest.pricePerAdult);
         const prior = await ctx.host.kv.get(dedupe);
         if (prior && !forceNotify) {
           scanned.push({
             watchId: watch.id,
             mode: search.mode,
-            cheapest: cheapest.price,
+            cheapest: cheapest.pricePerAdult,
             ceiling,
             underMax: true,
             skipped: "already_alerted_same_price",
@@ -92,8 +95,8 @@ export default defineTool({
         watch.returnDate ? ` / ${watch.returnDate}` : ""
       } (${watch.adults} pax)`;
       const priceLine = cheapest
-        ? `Menor: ${cheapest.price} ${cheapest.currency} total` +
-          ` (${cheapest.pricePerAdult}/adulto × ${watch.adults})` +
+        ? `Menor: ${cheapest.pricePerAdult} ${cheapest.currency}/pessoa` +
+          ` (${cheapest.price} total × ${watch.adults})` +
           (cheapest.airline
             ? ` ${cheapest.airline}${cheapest.flightNumber ?? ""}`
             : "") +
@@ -101,16 +104,17 @@ export default defineTool({
         : "Sem cotação — confira nos links.";
       const topLines = pool.slice(0, 5).map((q, i) => {
         return (
-          `${i + 1}) ${q.price} ${q.currency} total · ${q.flightDate}` +
+          `${i + 1}) ${q.pricePerAdult} ${q.currency}/pessoa` +
+          ` (${q.price} total) · ${q.flightDate}` +
           (q.airline ? ` · ${q.airline}${q.flightNumber ?? ""}` : "") +
           (q.departures[0] ? ` · ${q.departures[0]}` : "")
         );
       });
       const buy = cheapest?.buy ?? search.links;
       const text = [
-        underMax ? "Preco abaixo do teto (com margem)" : "Atualizacao de preco",
+        underMax ? "Preco abaixo do teto/pessoa (com margem)" : "Atualizacao de preco",
         route,
-        `Teto: ${watch.maxPrice} ${watch.currency} (margem ${marginPct}% → ${ceiling})`,
+        `Teto: ${watch.maxPrice} ${watch.currency}/pessoa (margem ${marginPct}% → ${ceiling}/pessoa)`,
         priceLine,
         ...topLines,
         "",
@@ -137,8 +141,9 @@ export default defineTool({
       }
 
       if (cheapest && underMax) {
-        await ctx.host.kv.put(alertDedupeKey(watch.id, cheapest.price), {
+        await ctx.host.kv.put(alertDedupeKey(watch.id, cheapest.pricePerAdult), {
           at: new Date().toISOString(),
+          pricePerAdult: cheapest.pricePerAdult,
           price: cheapest.price,
           flightDate: cheapest.flightDate,
         });
@@ -147,14 +152,14 @@ export default defineTool({
       scanned.push({
         watchId: watch.id,
         mode: search.mode,
-        cheapest: cheapest?.price ?? null,
+        cheapest: cheapest?.pricePerAdult ?? null,
         ceiling,
         underMax,
         skipped: null,
       });
       alerts.push({
         watchId: watch.id,
-        price: cheapest?.price ?? null,
+        price: cheapest?.pricePerAdult ?? null,
         underMax,
         text,
         notifyOk,

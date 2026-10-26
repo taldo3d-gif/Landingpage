@@ -6,9 +6,9 @@ export type FlightWatch = {
   destination: string;
   departDate: string;
   returnDate: string | null;
-  /** Target ceiling (total for all adults). */
+  /** Target ceiling **per adult** (e.g. 1500 = R$1500/pessoa). */
   maxPrice: number;
-  /** Allow offers up to maxPrice * (1 + marginPct/100). Default 15. */
+  /** Allow offers up to maxPrice * (1 + marginPct/100) per adult. Default 15. */
   marginPct: number;
   /** Accept flights within ±flexDays of departDate. Default 0 (exact). */
   flexDays: number;
