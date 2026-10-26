@@ -1,11 +1,11 @@
 import { defineTool } from "@grok/agent-sdk/tools";
 import * as z from "zod/v4";
 import { formatLinksMessage } from "../lib/buy-links.js";
-import { renderDealsBoardHtml } from "../lib/deals-board.js";
 import { alertDedupeKey } from "../lib/kv-keys.js";
 import { defaultWhatsAppTo, sendWhatsAppText } from "../lib/evolution.js";
 import { searchPrices } from "../lib/prices.js";
 import { listWatches } from "../lib/watches.js";
+
 
 export default defineTool({
   description:
@@ -79,58 +79,26 @@ export default defineTool({
         }
       }
 
-      const html = renderDealsBoardHtml({
-        origin: watch.origin,
-        destination: watch.destination,
-        departDate: watch.departDate,
-        returnDate: watch.returnDate,
-        adults: watch.adults,
-        maxPrice: watch.maxPrice,
-        currency: watch.currency,
-        mode: search.mode,
-        quotes: search.quotes,
-        links: search.links,
-      });
-      const art = await ctx.artifacts.tag({
-        kind: "deals-board",
-        key: `watch-alert:${watch.id}:${cheapest?.price ?? "none"}`,
-        title: `${watch.origin}→${watch.destination} alert`,
-        data: {
-          origin: watch.origin,
-          destination: watch.destination,
-          departDate: watch.departDate,
-          returnDate: watch.returnDate,
-          maxPrice: watch.maxPrice,
-          currency: watch.currency,
-          mode: search.mode,
-          dealCount: search.quotes.length,
-        },
-        contents: html,
-        contentType: "text/html; charset=utf-8",
-      });
-      const boardUrl = `http://127.0.0.1:3000/busca-passagem/v1/artifacts/${art.id}/content`;
-
       const route = `${watch.origin}→${watch.destination} ${watch.departDate}${
         watch.returnDate ? ` / ${watch.returnDate}` : ""
       } (${watch.adults} pax)`;
       const priceLine = cheapest
         ? `Menor preço visto: ${cheapest.price} ${cheapest.currency}` +
           (cheapest.airline ? ` (${cheapest.airline})` : "") +
-          ` via ${cheapest.source}`
-        : "Sem cotação no momento — abra os links e confira.";
+          ` (${search.mode})`
+        : "Sem cotação no momento — confira nos links.";
+      const topLines = search.quotes.slice(0, 5).map((q, i) => {
+        return `${i + 1}) ${q.price} ${q.currency} ${q.airline ?? ""} ${q.departures[0] ?? ""}`;
+      });
       const text = [
-        underMax ? "🔥 Preço abaixo do teto!" : "🔎 Digest da rota",
+        underMax ? "Preco abaixo do teto!" : "Digest da rota",
         route,
         `Teto: ${watch.maxPrice} ${watch.currency}`,
-        `Modo: ${search.mode}`,
         priceLine,
-        `Lista completa: ${boardUrl}`,
+        ...topLines,
         "",
-        "Comprar / conferir:",
+        "Comprar so nestes sites (evite Kiwi/Kiwifi):",
         formatLinksMessage(search.links),
-        cheapest?.deepLink && cheapest.deepLink !== search.links.googleFlights
-          ? `\nLink da cotação: ${cheapest.deepLink}`
-          : "",
       ]
         .filter(Boolean)
         .join("\n");

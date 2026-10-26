@@ -47,7 +47,8 @@ function mapRows(
     transfers?: number;
   }>,
   currency: string,
-  fallbackLink: string,
+  /** Always a trusted buy URL (Google/Decolar/…), never Aviasales/Kiwi affiliate. */
+  trustedBuyLink: string,
 ): PriceQuote[] {
   return rows
     .filter((row) => typeof row.price === "number")
@@ -59,11 +60,8 @@ function mapRows(
         (v): v is string => typeof v === "string",
       ),
       source: "travelpayouts" as const,
-      deepLink: row.link
-        ? row.link.startsWith("http")
-          ? row.link
-          : `https://www.aviasales.com${row.link.startsWith("/") ? row.link : `/${row.link}`}`
-        : fallbackLink,
+      // Price from Travelpayouts; checkout only via trusted meta/OTA links.
+      deepLink: trustedBuyLink,
     }))
     .sort((a, b) => a.price - b.price);
 }
@@ -213,6 +211,6 @@ export async function searchPrices(input: {
     mode: "travelpayouts",
     links,
     note:
-      "Preços do cache Aviasales (buscas recentes). Podem diferir 1–2 dias do site; confira no link antes de comprar. Valores tipicamente por adulto.",
+      "Preços do cache Aviasales (referência). Compra só via Google Flights / Decolar / Kayak / Skyscanner — nunca Kiwi/Kiwifi nem checkout Aviasales. Confira o valor no site antes de pagar. Valores tipicamente por adulto.",
   };
 }
