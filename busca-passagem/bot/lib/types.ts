@@ -1,4 +1,4 @@
-/** Shared JSON-shaped types for watches and holds (no interfaces). */
+/** Shared JSON-shaped types for watches and deal alerts. */
 
 export type FlightWatch = {
   id: string;
@@ -14,27 +14,18 @@ export type FlightWatch = {
   updatedAt: string;
 };
 
-export type FlightOfferSummary = {
-  id: string;
+export type PriceQuote = {
   price: number;
   currency: string;
-  airlines: string[];
+  airline: string | null;
   departures: string[];
-  /** Full Amadeus offer JSON (string) for order creation; empty for thin summaries. */
-  rawOfferJson: string;
-  mock: boolean;
+  source: "travelpayouts" | "mock";
+  deepLink: string | null;
 };
 
-export type FlightHold = {
-  id: string;
-  watchId: string;
-  offerId: string;
-  price: number;
-  currency: string;
-  status: "pending_confirm" | "confirmed" | "cancelled" | "expired";
-  expiresAt: string;
-  amadeusOrderId: string | null;
-  mock: boolean;
-  createdAt: string;
-  summary: string;
+export type BuyLinks = {
+  googleFlights: string;
+  kayak: string;
+  skyscanner: string;
+  decolar: string;
 };

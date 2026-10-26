@@ -16,9 +16,15 @@ export default defineTool({
     destination: z.string().min(3).max(3).describe("IATA destination, e.g. LIS"),
     departDate: z.string().describe("YYYY-MM-DD"),
     returnDate: z.string().nullable().optional().describe("YYYY-MM-DD or null for one-way"),
-    maxPrice: z.number().positive().describe("Alert/hold when price is at or below this"),
+    maxPrice: z.number().positive().describe("Alert on WhatsApp when price ≤ this"),
     currency: z.string().min(3).max(3).optional().describe("Default BRL"),
-    adults: z.number().int().min(1).max(9).optional(),
+    adults: z
+      .number()
+      .int()
+      .min(1)
+      .max(9)
+      .optional()
+      .describe("Default 2 (casal)"),
     active: z.boolean().optional(),
     notes: z.string().nullable().optional(),
   }),
@@ -32,7 +38,7 @@ export default defineTool({
       returnDate: input.returnDate ?? null,
       maxPrice: input.maxPrice,
       currency: (input.currency ?? "BRL").toUpperCase(),
-      adults: input.adults ?? 1,
+      adults: input.adults ?? 2,
       active: input.active ?? true,
       notes: input.notes ?? null,
       updatedAt: new Date().toISOString(),
@@ -52,7 +58,7 @@ export default defineTool({
       returnDate: input.returnDate === undefined ? (existing?.returnDate ?? null) : input.returnDate,
       maxPrice: input.maxPrice,
       currency: (input.currency ?? existing?.currency ?? "BRL").toUpperCase(),
-      adults: input.adults ?? existing?.adults ?? 1,
+      adults: input.adults ?? existing?.adults ?? 2,
       active: input.active ?? existing?.active ?? true,
       notes: input.notes === undefined ? (existing?.notes ?? null) : input.notes,
       updatedAt: now,

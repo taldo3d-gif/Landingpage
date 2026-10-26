@@ -1,5 +1,5 @@
-import { HOLD_INDEX_KEY, holdKey, WATCH_INDEX_KEY, watchKey } from "./kv-keys.js";
-import type { FlightHold, FlightWatch } from "./types.js";
+import { WATCH_INDEX_KEY, watchKey } from "./kv-keys.js";
+import type { FlightWatch } from "./types.js";
 
 type Kv = {
   get(key: string): Promise<unknown>;
@@ -42,46 +42,4 @@ export async function putWatch(kv: Kv, watch: FlightWatch): Promise<void> {
     await kv.put(WATCH_INDEX_KEY, ids);
   }
   await kv.put(watchKey(watch.id), watch);
-}
-
-export async function listHoldIds(kv: Kv): Promise<string[]> {
-  return asStringArray(await kv.get(HOLD_INDEX_KEY));
-}
-
-export async function getHold(
-  kv: Kv,
-  id: string,
-): Promise<FlightHold | undefined> {
-  const raw = await kv.get(holdKey(id));
-  if (!raw || typeof raw !== "object") return undefined;
-  return raw as FlightHold;
-}
-
-export async function putHold(kv: Kv, hold: FlightHold): Promise<void> {
-  const ids = await listHoldIds(kv);
-  if (!ids.includes(hold.id)) {
-    ids.push(hold.id);
-    await kv.put(HOLD_INDEX_KEY, ids);
-  }
-  await kv.put(holdKey(hold.id), hold);
-}
-
-export async function findPendingHoldForWatch(
-  kv: Kv,
-  watchId: string,
-): Promise<FlightHold | undefined> {
-  const ids = await listHoldIds(kv);
-  const now = Date.now();
-  for (const id of ids) {
-    const h = await getHold(kv, id);
-    if (!h || h.watchId !== watchId) continue;
-    if (h.status !== "pending_confirm") continue;
-    if (Date.parse(h.expiresAt) < now) {
-      h.status = "expired";
-      await putHold(kv, h);
-      continue;
-    }
-    return h;
-  }
-  return undefined;
 }

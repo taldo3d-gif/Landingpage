@@ -27,7 +27,6 @@ export default defineTool({
         hint: "Pass to= or set WHATSAPP_TO",
       };
     }
-    const result = await sendWhatsAppText({ to: dest, text });
-    return result;
+    return await sendWhatsAppText({ to: dest, text });
   },
 });

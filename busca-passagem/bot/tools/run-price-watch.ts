@@ -1,33 +1,32 @@
 import { defineTool } from "@grok/agent-sdk/tools";
 import * as z from "zod/v4";
-import { createFlightOrder, searchFlightOffers } from "../lib/amadeus.js";
+import { formatLinksMessage } from "../lib/buy-links.js";
+import { alertDedupeKey } from "../lib/kv-keys.js";
 import { defaultWhatsAppTo, sendWhatsAppText } from "../lib/evolution.js";
-import { dedupeHoldKey } from "../lib/kv-keys.js";
-import {
-  findPendingHoldForWatch,
-  listWatches,
-  putHold,
-} from "../lib/watches.js";
-import type { FlightHold } from "../lib/types.js";
-
-const HOLD_TTL_MS = 30 * 60 * 1000;
+import { searchPrices } from "../lib/prices.js";
+import { listWatches } from "../lib/watches.js";
 
 export default defineTool({
   description:
-    "Deterministic price-watch cycle: scan active watches, hold when cheap, WhatsApp alert for SIM/NÃO.",
+    "Scan active watches, find cheap quotes, WhatsApp you with buy links when price ≤ max (or forceNotify).",
   effect: "write",
   inputSchema: z.object({
+    forceNotify: z
+      .boolean()
+      .optional()
+      .describe("If true, always send digest even above maxPrice"),
     dryNotify: z
       .boolean()
       .optional()
-      .describe("If true, skip WhatsApp send and only return draft messages"),
+      .describe("If true, skip WhatsApp and only return draft messages"),
   }),
-  dryRunResult: () => ({ dryRun: true, scanned: 0, alerts: [] as string[] }),
-  async execute({ dryNotify }, ctx) {
+  dryRunResult: () => ({ dryRun: true, alertCount: 0 }),
+  async execute({ forceNotify, dryNotify }, ctx) {
     const watches = (await listWatches(ctx.host.kv)).filter((w) => w.active);
     const alerts: Array<{
-      holdId: string;
-      summary: string;
+      watchId: string;
+      price: number | null;
+      underMax: boolean;
       text: string;
       notifyOk: boolean;
       notifyMode: string;
@@ -35,27 +34,13 @@ export default defineTool({
     const scanned: Array<{
       watchId: string;
       mode: string;
-      offerCount: number;
       cheapest: number | null;
-      hit: boolean;
+      underMax: boolean;
       skipped: string | null;
     }> = [];
 
     for (const watch of watches) {
-      const pending = await findPendingHoldForWatch(ctx.host.kv, watch.id);
-      if (pending) {
-        scanned.push({
-          watchId: watch.id,
-          mode: "n/a",
-          offerCount: 0,
-          cheapest: null,
-          hit: false,
-          skipped: `pending_hold:${pending.id}`,
-        });
-        continue;
-      }
-
-      const search = await searchFlightOffers({
+      const search = await searchPrices({
         origin: watch.origin,
         destination: watch.destination,
         departDate: watch.departDate,
@@ -64,65 +49,57 @@ export default defineTool({
         currency: watch.currency,
         maxPrice: watch.maxPrice,
       });
-      const cheap = search.offers
-        .filter((o) => o.price <= watch.maxPrice)
-        .sort((a, b) => a.price - b.price)[0];
+      const cheapest = search.quotes[0] ?? null;
+      const underMax = cheapest != null && cheapest.price <= watch.maxPrice;
 
-      if (!cheap) {
+      if (!underMax && !forceNotify) {
         scanned.push({
           watchId: watch.id,
           mode: search.mode,
-          offerCount: search.offers.length,
-          cheapest: search.offers[0]?.price ?? null,
-          hit: false,
-          skipped: null,
+          cheapest: cheapest?.price ?? null,
+          underMax: false,
+          skipped: "above_max",
         });
         continue;
       }
 
-      const dedupe = dedupeHoldKey(watch.id, cheap.id);
-      const prior = await ctx.host.kv.get(dedupe);
-      if (prior) {
-        scanned.push({
-          watchId: watch.id,
-          mode: search.mode,
-          offerCount: search.offers.length,
-          cheapest: cheap.price,
-          hit: true,
-          skipped: "deduped_offer",
-        });
-        continue;
+      if (cheapest && underMax) {
+        const dedupe = alertDedupeKey(watch.id, cheapest.price);
+        const prior = await ctx.host.kv.get(dedupe);
+        if (prior && !forceNotify) {
+          scanned.push({
+            watchId: watch.id,
+            mode: search.mode,
+            cheapest: cheapest.price,
+            underMax: true,
+            skipped: "already_alerted_same_price",
+          });
+          continue;
+        }
       }
 
-      const order = await createFlightOrder({
-        offer: cheap,
-        travelerName: {
-          first: process.env.AMADEUS_TRAVELER_FIRST ?? "Passageiro",
-          last: process.env.AMADEUS_TRAVELER_LAST ?? "Principal",
-        },
-      });
-      const now = Date.now();
-      const hold: FlightHold = {
-        id: `h-${now.toString(36)}`,
-        watchId: watch.id,
-        offerId: cheap.id,
-        price: cheap.price,
-        currency: cheap.currency,
-        status: "pending_confirm",
-        expiresAt: new Date(now + HOLD_TTL_MS).toISOString(),
-        amadeusOrderId: order.orderId,
-        mock: order.mock,
-        createdAt: new Date(now).toISOString(),
-        summary: `${watch.origin}→${watch.destination} ${watch.departDate} ${cheap.price} ${cheap.currency}`,
-      };
-      await putHold(ctx.host.kv, hold);
-      await ctx.host.kv.put(dedupe, { holdId: hold.id, exp: hold.expiresAt });
-
-      const text =
-        `✈️ Preço baixo achado!\n` +
-        `${hold.summary}\n` +
-        `Hold: ${hold.id} (expira ${hold.expiresAt})\n` +
-        `Responda SIM para confirmar ou NÃO para cancelar.`;
+      const route = `${watch.origin}→${watch.destination} ${watch.departDate}${
+        watch.returnDate ? ` / ${watch.returnDate}` : ""
+      } (${watch.adults} pax)`;
+      const priceLine = cheapest
+        ? `Menor preço visto: ${cheapest.price} ${cheapest.currency}` +
+          (cheapest.airline ? ` (${cheapest.airline})` : "") +
+          ` via ${cheapest.source}`
+        : "Sem cotação no momento — abra os links e confira.";
+      const text = [
+        underMax ? "🔥 Preço abaixo do teto!" : "🔎 Digest da rota",
+        route,
+        `Teto: ${watch.maxPrice} ${watch.currency}`,
+        priceLine,
+        "",
+        "Comprar / conferir:",
+        formatLinksMessage(search.links),
+        cheapest?.deepLink && cheapest.deepLink !== search.links.googleFlights
+          ? `\nLink da cotação: ${cheapest.deepLink}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
 
       let notifyOk = false;
       let notifyMode = "skipped";
@@ -137,17 +114,24 @@ export default defineTool({
         }
       }
 
+      if (cheapest && underMax) {
+        await ctx.host.kv.put(alertDedupeKey(watch.id, cheapest.price), {
+          at: new Date().toISOString(),
+          price: cheapest.price,
+        });
+      }
+
       scanned.push({
         watchId: watch.id,
         mode: search.mode,
-        offerCount: search.offers.length,
-        cheapest: cheap.price,
-        hit: true,
+        cheapest: cheapest?.price ?? null,
+        underMax,
         skipped: null,
       });
       alerts.push({
-        holdId: hold.id,
-        summary: hold.summary,
+        watchId: watch.id,
+        price: cheapest?.price ?? null,
+        underMax,
         text,
         notifyOk,
         notifyMode,

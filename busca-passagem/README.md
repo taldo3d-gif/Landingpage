@@ -1,32 +1,29 @@
 # busca-passagem
 
-Agente Agent SDK que monitora preços de passagens (Amadeus), cria **hold** quando o preço cai no teto, e avisa no **WhatsApp** (Evolution API) para você confirmar com SIM / NÃO.
+Agente **pessoal** (você + esposa): monitora rotas, acha preço baixo e manda
+**link pra comprar** no Google Flights / Kayak / Skyscanner / Decolar.
+Não reserva nem emite bilhete.
 
 ## Subir local
 
 ```bash
 cd busca-passagem
-cp .env.example .env   # preencha Amadeus + Evolution quando tiver
-npx @grok/agent-sdk@0.2.29 login   # credencial Cursor p/ turnos de modelo
+cp .env.example .env
+npx @grok/agent-sdk@0.2.29 login
 npx @grok/agent-sdk@0.2.29 dev
-# Playground: http://127.0.0.1:3000/playground
+# http://127.0.0.1:3000/playground
 ```
 
-Sem chaves Amadeus/Evolution as tools rodam em **mock** (busca falsa + log de WhatsApp).
+Sem `TRAVELPAYOUTS_TOKEN` as cotações são mock; os **links de compra são reais**.
 
-## Fluxo
+## Uso
 
-1. No playground: peça para cadastrar um watch (`upsert-watch`).
-2. Dispare o cron em dev:
+1. No playground: *“Monitora GRU→LIS em 2026-12-01, 2 adultos, teto 2000 BRL”*
+2. *“Busca o preço agora”* ou dispare o cron:
    `curl -X POST http://127.0.0.1:3000/busca-passagem/v1/dev/schedules/price-watch`
-3. Ou chame `run-price-watch` no chat.
-4. Evolution webhook → `POST /busca-passagem/v1/channels/whatsapp/inbound`  
-   Header: `x-webhook-secret: $WHATSAPP_WEBHOOK_SECRET`
+3. WhatsApp (opcional): Evolution → `POST .../v1/channels/whatsapp/inbound`
 
-## Checks
+## Preços reais (opcional)
 
-```bash
-npx @grok/agent-sdk@0.2.29 validate --dir .
-npx @grok/agent-sdk@0.2.29 info --dir . --json
-npm run check
-```
+Conta grátis em [Travelpayouts](https://www.travelpayouts.com/) → Profile → API token →
+`TRAVELPAYOUTS_TOKEN` no `.env`.
