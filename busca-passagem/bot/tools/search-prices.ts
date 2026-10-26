@@ -4,7 +4,7 @@ import { searchPrices } from "../lib/prices.js";
 
 export default defineTool({
   description:
-    "Search cheap flight prices (Travelpayouts when token set; otherwise mock) and return buy links for Google Flights, Kayak, Skyscanner, Decolar.",
+    "Search flight prices. Prefer show-deals-board when the user wants a list/dashboard. Returns mode mock|travelpayouts.",
   effect: "read",
   inputSchema: z.object({
     origin: z.string().min(3).max(3),
@@ -28,9 +28,17 @@ export default defineTool({
     const cheapest = result.quotes[0] ?? null;
     return {
       mode: result.mode,
+      note: result.note,
       count: result.quotes.length,
       cheapest,
-      quotes: result.quotes.slice(0, 5),
+      quotes: result.quotes.slice(0, 10).map((q) => ({
+        price: q.price,
+        currency: q.currency,
+        airline: q.airline,
+        departures: q.departures,
+        deepLink: q.deepLink,
+        source: q.source,
+      })),
       buyLinks: result.links,
       underMax:
         input.maxPrice != null && cheapest != null

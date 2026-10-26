@@ -1,6 +1,7 @@
 import { defineTool } from "@grok/agent-sdk/tools";
 import * as z from "zod/v4";
 import { formatLinksMessage } from "../lib/buy-links.js";
+import { renderDealsBoardHtml } from "../lib/deals-board.js";
 import { alertDedupeKey } from "../lib/kv-keys.js";
 import { defaultWhatsAppTo, sendWhatsAppText } from "../lib/evolution.js";
 import { searchPrices } from "../lib/prices.js";
@@ -78,6 +79,37 @@ export default defineTool({
         }
       }
 
+      const html = renderDealsBoardHtml({
+        origin: watch.origin,
+        destination: watch.destination,
+        departDate: watch.departDate,
+        returnDate: watch.returnDate,
+        adults: watch.adults,
+        maxPrice: watch.maxPrice,
+        currency: watch.currency,
+        mode: search.mode,
+        quotes: search.quotes,
+        links: search.links,
+      });
+      const art = await ctx.artifacts.tag({
+        kind: "deals-board",
+        key: `watch-alert:${watch.id}:${cheapest?.price ?? "none"}`,
+        title: `${watch.origin}→${watch.destination} alert`,
+        data: {
+          origin: watch.origin,
+          destination: watch.destination,
+          departDate: watch.departDate,
+          returnDate: watch.returnDate,
+          maxPrice: watch.maxPrice,
+          currency: watch.currency,
+          mode: search.mode,
+          dealCount: search.quotes.length,
+        },
+        contents: html,
+        contentType: "text/html; charset=utf-8",
+      });
+      const boardUrl = `http://127.0.0.1:3000/busca-passagem/v1/artifacts/${art.id}/content`;
+
       const route = `${watch.origin}→${watch.destination} ${watch.departDate}${
         watch.returnDate ? ` / ${watch.returnDate}` : ""
       } (${watch.adults} pax)`;
@@ -90,7 +122,9 @@ export default defineTool({
         underMax ? "🔥 Preço abaixo do teto!" : "🔎 Digest da rota",
         route,
         `Teto: ${watch.maxPrice} ${watch.currency}`,
+        `Modo: ${search.mode}`,
         priceLine,
+        `Lista completa: ${boardUrl}`,
         "",
         "Comprar / conferir:",
         formatLinksMessage(search.links),
