@@ -1,9 +1,32 @@
 import { buildBuyLinks } from "./buy-links.js";
-import type { PriceQuote } from "./types.js";
+import type { BuyLinks, PriceQuote } from "./types.js";
 
 export function travelpayoutsConfigured(): boolean {
   const t = process.env.TRAVELPAYOUTS_TOKEN?.trim();
   return Boolean(t);
+}
+
+function dayOnly(isoOrDate: string): string {
+  return isoOrDate.slice(0, 10);
+}
+
+function parseDay(d: string): number {
+  return Date.parse(`${dayOnly(d)}T12:00:00Z`);
+}
+
+function withinFlex(flightDate: string, target: string, flexDays: number): boolean {
+  if (flexDays <= 0) return dayOnly(flightDate) === dayOnly(target);
+  const diff = Math.abs(parseDay(flightDate) - parseDay(target));
+  return diff <= flexDays * 86_400_000;
+}
+
+/** Effective buy ceiling: maxPrice + margin%. */
+export function effectiveCeiling(
+  maxPrice: number | undefined,
+  marginPct: number,
+): number | null {
+  if (maxPrice == null) return null;
+  return Math.round(maxPrice * (1 + Math.max(0, marginPct) / 100));
 }
 
 function mockQuotes(input: {
@@ -15,55 +38,97 @@ function mockQuotes(input: {
   maxPrice?: number;
   currency: string;
 }): PriceQuote[] {
-  const base = Math.max(220, Math.round((input.maxPrice ?? 1500) * 0.68));
-  const links = buildBuyLinks(input);
+  const perAdult = Math.max(
+    220,
+    Math.round(((input.maxPrice ?? 1500) / input.adults) * 0.72),
+  );
+  const buy = buildBuyLinks(input);
   return [
     {
-      price: base,
+      price: perAdult * input.adults,
+      pricePerAdult: perAdult,
       currency: input.currency,
       airline: "G3",
+      flightNumber: "1234",
+      flightDate: input.departDate,
+      returnDate: input.returnDate ?? null,
       departures: [`${input.departDate}T08:15`],
+      transfers: 0,
       source: "mock",
-      deepLink: links.googleFlights,
-    },
-    {
-      price: base + 180,
-      currency: input.currency,
-      airline: "LA",
-      departures: [`${input.departDate}T14:40`],
-      source: "mock",
-      deepLink: links.kayak,
+      buy,
     },
   ];
 }
 
-function mapRows(
-  rows: Array<{
-    price?: number;
-    airline?: string;
-    departure_at?: string;
-    return_at?: string;
-    link?: string;
-    transfers?: number;
-  }>,
-  currency: string,
-  /** Always a trusted buy URL (Google/Decolar/…), never Aviasales/Kiwi affiliate. */
-  trustedBuyLink: string,
+type RawRow = {
+  price?: number;
+  airline?: string;
+  flight_number?: string | number;
+  departure_at?: string;
+  return_at?: string;
+  transfers?: number;
+};
+
+function toQuotes(
+  rows: RawRow[],
+  input: {
+    origin: string;
+    destination: string;
+    departDate: string;
+    returnDate?: string | null;
+    adults: number;
+    currency: string;
+    flexDays: number;
+    /** If true, keep any date in the fetched set (still sorted by price). */
+    anyDate?: boolean;
+  },
 ): PriceQuote[] {
-  return rows
-    .filter((row) => typeof row.price === "number")
-    .map((row) => ({
-      price: row.price as number,
-      currency: currency.toUpperCase(),
+  const adults = Math.max(1, input.adults);
+  const out: PriceQuote[] = [];
+  for (const row of rows) {
+    if (typeof row.price !== "number" || !row.departure_at) continue;
+    const flightDate = dayOnly(row.departure_at);
+    if (!input.anyDate && !withinFlex(flightDate, input.departDate, input.flexDays)) {
+      continue;
+    }
+    const ret = row.return_at ? dayOnly(row.return_at) : input.returnDate ?? null;
+    if (
+      !input.anyDate &&
+      input.returnDate &&
+      ret &&
+      !withinFlex(ret, input.returnDate, input.flexDays)
+    ) {
+      continue;
+    }
+    const pricePerAdult = row.price;
+    const price = Math.round(pricePerAdult * adults);
+    const buy = buildBuyLinks({
+      origin: input.origin,
+      destination: input.destination,
+      departDate: flightDate,
+      returnDate: ret,
+      adults,
+    });
+    const fn =
+      row.flight_number != null ? String(row.flight_number) : null;
+    out.push({
+      price,
+      pricePerAdult,
+      currency: input.currency.toUpperCase(),
       airline: row.airline ?? null,
+      flightNumber: fn,
+      flightDate,
+      returnDate: ret,
       departures: [row.departure_at, row.return_at].filter(
         (v): v is string => typeof v === "string",
       ),
-      source: "travelpayouts" as const,
-      // Price from Travelpayouts; checkout only via trusted meta/OTA links.
-      deepLink: trustedBuyLink,
-    }))
-    .sort((a, b) => a.price - b.price);
+      transfers: typeof row.transfers === "number" ? row.transfers : null,
+      source: "travelpayouts",
+      buy,
+    });
+  }
+  out.sort((a, b) => a.price - b.price || a.flightDate.localeCompare(b.flightDate));
+  return out;
 }
 
 async function fetchPricesForDates(input: {
@@ -73,7 +138,7 @@ async function fetchPricesForDates(input: {
   returnDate?: string | null;
   currency: string;
   token: string;
-}): Promise<PriceQuote[]> {
+}): Promise<RawRow[]> {
   const params = new URLSearchParams({
     origin: input.origin.toUpperCase(),
     destination: input.destination.toUpperCase(),
@@ -81,8 +146,9 @@ async function fetchPricesForDates(input: {
     currency: input.currency.toLowerCase(),
     market: process.env.TRAVELPAYOUTS_MARKET ?? "br",
     sorting: "price",
-    limit: "30",
+    limit: "50",
     one_way: input.returnDate ? "false" : "true",
+    unique: "false",
     token: input.token,
   });
   if (input.returnDate) params.set("return_at", input.returnDate);
@@ -94,75 +160,14 @@ async function fetchPricesForDates(input: {
     const text = await res.text();
     throw new Error(`Travelpayouts prices_for_dates (${res.status}): ${text.slice(0, 240)}`);
   }
-  const json = (await res.json()) as { data?: Array<Record<string, unknown>> };
-  const links = buildBuyLinks({
-    origin: input.origin,
-    destination: input.destination,
-    departDate: input.departDate,
-    returnDate: input.returnDate,
-    adults: 2,
-  });
-  return mapRows(
-    (json.data ?? []) as Array<{
-      price?: number;
-      airline?: string;
-      departure_at?: string;
-      return_at?: string;
-      link?: string;
-    }>,
-    input.currency,
-    links.googleFlights,
-  );
-}
-
-/** Cheapest cached tickets for the month of departDate (broader net for "bugs"). */
-async function fetchCheapMonth(input: {
-  origin: string;
-  destination: string;
-  departDate: string;
-  currency: string;
-  token: string;
-}): Promise<PriceQuote[]> {
-  const month = input.departDate.slice(0, 7); // YYYY-MM
-  const params = new URLSearchParams({
-    origin: input.origin.toUpperCase(),
-    destination: input.destination.toUpperCase(),
-    departure_at: month,
-    currency: input.currency.toLowerCase(),
-    market: process.env.TRAVELPAYOUTS_MARKET ?? "br",
-    sorting: "price",
-    limit: "30",
-    one_way: "true",
-    token: input.token,
-  });
-  const res = await fetch(
-    `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?${params}`,
-  );
-  if (!res.ok) return [];
-  const json = (await res.json()) as { data?: Array<Record<string, unknown>> };
-  const links = buildBuyLinks({
-    origin: input.origin,
-    destination: input.destination,
-    departDate: input.departDate,
-    returnDate: null,
-    adults: 2,
-  });
-  return mapRows(
-    (json.data ?? []) as Array<{
-      price?: number;
-      airline?: string;
-      departure_at?: string;
-      return_at?: string;
-      link?: string;
-    }>,
-    input.currency,
-    links.googleFlights,
-  );
+  const json = (await res.json()) as { data?: RawRow[] };
+  return json.data ?? [];
 }
 
 /**
- * Cached prices from Aviasales/Travelpayouts Data API.
- * Docs: https://support.travelpayouts.com/hc/en-us/articles/203956163
+ * Travelpayouts Data API prices are **per adult** (cache).
+ * We multiply by `adults` and build buy links for the **exact flight date**
+ * of each quote — never the requested date if the fare is on another day.
  */
 export async function searchPrices(input: {
   origin: string;
@@ -171,46 +176,96 @@ export async function searchPrices(input: {
   returnDate?: string | null;
   adults: number;
   maxPrice?: number;
+  /** Extra headroom above maxPrice, percent. Default 15. */
+  marginPct?: number;
+  /** ± days around departDate. Default 0. */
+  flexDays?: number;
   currency: string;
-  includeMonthScan?: boolean;
 }): Promise<{
   quotes: PriceQuote[];
+  underCeiling: PriceQuote[];
+  /** Same month, other days — only when exact/flex window is empty. */
+  nearby: PriceQuote[];
   mode: "travelpayouts" | "mock";
-  links: ReturnType<typeof buildBuyLinks>;
+  links: BuyLinks;
   note: string;
+  ceiling: number | null;
+  marginPct: number;
+  flexDays: number;
 }> {
-  const links = buildBuyLinks(input);
+  const adults = Math.max(1, input.adults);
+  const marginPct = input.marginPct ?? 15;
+  const flexDays = input.flexDays ?? 0;
+  const ceiling = effectiveCeiling(input.maxPrice, marginPct);
+  const links = buildBuyLinks({ ...input, adults });
 
   if (!travelpayoutsConfigured()) {
+    const quotes = mockQuotes({ ...input, adults });
     return {
-      quotes: mockQuotes(input),
+      quotes,
+      underCeiling:
+        ceiling == null ? quotes : quotes.filter((q) => q.price <= ceiling),
+      nearby: [],
       mode: "mock",
       links,
-      note: "TRAVELPAYOUTS_TOKEN ausente — preços mock. Links de compra são reais.",
+      note: "TRAVELPAYOUTS_TOKEN ausente — preços mock.",
+      ceiling,
+      marginPct,
+      flexDays,
     };
   }
 
   const token = process.env.TRAVELPAYOUTS_TOKEN!.trim();
-  const exact = await fetchPricesForDates({ ...input, token });
-  let quotes = exact;
-  if ((input.includeMonthScan ?? true) && exact.length < 3) {
-    const month = await fetchCheapMonth({ ...input, token });
-    const seen = new Set(exact.map((q) => `${q.price}-${q.airline}-${q.departures[0]}`));
-    for (const q of month) {
-      const k = `${q.price}-${q.airline}-${q.departures[0]}`;
-      if (!seen.has(k)) {
-        quotes.push(q);
-        seen.add(k);
-      }
-    }
-    quotes.sort((a, b) => a.price - b.price);
+  const month = input.departDate.slice(0, 7);
+
+  // 1) Exact / flex window (prefer day-specific API call first).
+  let raw = await fetchPricesForDates({ ...input, token });
+  let quotes = toQuotes(raw, { ...input, adults, flexDays });
+
+  // 2) Month scan if empty — still filter to flex/exact day for `quotes`.
+  let rawMonth: RawRow[] | null = null;
+  if (quotes.length === 0) {
+    rawMonth = await fetchPricesForDates({
+      ...input,
+      departDate: month,
+      token,
+    });
+    quotes = toQuotes(rawMonth, { ...input, adults, flexDays });
   }
+
+  // 3) Nearby alternatives in the same month (real dates + matching links).
+  let nearby: PriceQuote[] = [];
+  if (quotes.length === 0) {
+    if (!rawMonth) {
+      rawMonth = await fetchPricesForDates({
+        ...input,
+        departDate: month,
+        token,
+      });
+    }
+    nearby = toQuotes(rawMonth, {
+      ...input,
+      adults,
+      flexDays: 0,
+      anyDate: true,
+    }).slice(0, 8);
+  }
+
+  const underCeiling =
+    ceiling == null ? quotes : quotes.filter((q) => q.price <= ceiling);
 
   return {
     quotes,
+    underCeiling,
+    nearby,
     mode: "travelpayouts",
     links,
     note:
-      "Preços do cache Aviasales (referência). Compra só via Google Flights / Decolar / Kayak / Skyscanner — nunca Kiwi/Kiwifi nem checkout Aviasales. Confira o valor no site antes de pagar. Valores tipicamente por adulto.",
+      `Total = tarifa/adulto × ${adults}. Cada link usa a DATA DO ITEM. ` +
+      `Teto com margem ${marginPct}%: ${ceiling ?? "—"}. ` +
+      `Confira o total na Decolar/Kayak antes de pagar (cache pode variar).`,
+    ceiling,
+    marginPct,
+    flexDays,
   };
 }

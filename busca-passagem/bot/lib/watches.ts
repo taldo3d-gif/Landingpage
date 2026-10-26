@@ -22,7 +22,28 @@ export async function getWatch(
 ): Promise<FlightWatch | undefined> {
   const raw = await kv.get(watchKey(id));
   if (!raw || typeof raw !== "object") return undefined;
-  return raw as FlightWatch;
+  const w = raw as Partial<FlightWatch> & {
+    id: string;
+    origin: string;
+    destination: string;
+    departDate: string;
+    maxPrice: number;
+  };
+  return {
+    id: w.id,
+    origin: w.origin,
+    destination: w.destination,
+    departDate: w.departDate,
+    returnDate: w.returnDate ?? null,
+    maxPrice: w.maxPrice,
+    marginPct: typeof w.marginPct === "number" ? w.marginPct : 15,
+    flexDays: typeof w.flexDays === "number" ? w.flexDays : 0,
+    currency: w.currency ?? "BRL",
+    adults: typeof w.adults === "number" ? w.adults : 2,
+    active: w.active ?? true,
+    notes: w.notes ?? null,
+    updatedAt: w.updatedAt ?? new Date().toISOString(),
+  };
 }
 
 export async function listWatches(kv: Kv): Promise<FlightWatch[]> {

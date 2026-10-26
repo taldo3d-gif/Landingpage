@@ -6,7 +6,12 @@ export type FlightWatch = {
   destination: string;
   departDate: string;
   returnDate: string | null;
+  /** Target ceiling (total for all adults). */
   maxPrice: number;
+  /** Allow offers up to maxPrice * (1 + marginPct/100). Default 15. */
+  marginPct: number;
+  /** Accept flights within ±flexDays of departDate. Default 0 (exact). */
+  flexDays: number;
   currency: string;
   adults: number;
   active: boolean;
@@ -15,12 +20,26 @@ export type FlightWatch = {
 };
 
 export type PriceQuote = {
+  /** Total for all adults (what you pay). */
   price: number;
+  /** Per-adult fare from the data source. */
+  pricePerAdult: number;
   currency: string;
   airline: string | null;
+  flightNumber: string | null;
+  /** Exact flight date YYYY-MM-DD (must match buy links). */
+  flightDate: string;
+  returnDate: string | null;
   departures: string[];
+  transfers: number | null;
   source: "travelpayouts" | "mock";
-  deepLink: string | null;
+  /** Trusted buy links for THIS flight date (not a generic search). */
+  buy: {
+    decolar: string;
+    kayak: string;
+    skyscanner: string;
+    googleFlights: string;
+  };
 };
 
 export type BuyLinks = {

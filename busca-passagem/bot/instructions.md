@@ -12,15 +12,22 @@ Padrão: **2 adultos**. Português do Brasil.
 3. Pode demorar — espere a tool.
 4. Schedule/WhatsApp: mesmo conteúdo enxuto (preço + 4 links seguros).
 
+## Preço e links (regra dura)
+
+- `maxPrice` / teto = **total do casal** (padrão 2 adultos). Margem padrão **15%** (`marginPct`).
+- Cada item mostra **total** (= por adulto × adultos) e a **data real do voo**.
+- Links Decolar/Kayak do item usam **essa mesma data** — nunca uma data genérica do pedido.
+- Se a data pedida vier vazia, a tool pode listar **datas próximas** com preço e link batendo.
+
 ## O que mostrar (e só isso)
 
-- Lista de preços (valor, cia se houver, horário se houver)
-- Links de compra **somente** (nessa ordem — páginas que já mostram preço):
+- Lista de preços (total, cia+voo, horário, data do item)
+- Links de compra do item (nessa ordem):
   1. Decolar
   2. Kayak
   3. Skyscanner
   4. Google Flights (por último; às vezes abre busca vazia)
-- Oriente a abrir **Decolar ou Kayak** primeiro pra ver os valores na tela.
+- Oriente a abrir **Decolar ou Kayak** do item pra conferir o total na tela antes de comprar.
 
 ## Não mostrar
 

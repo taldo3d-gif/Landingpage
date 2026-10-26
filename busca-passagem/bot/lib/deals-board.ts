@@ -53,14 +53,18 @@ export function renderDealsBoardHtml(input: {
           : q.price <= input.maxPrice
             ? '<span class="ok">≤ teto</span>'
             : '<span class="no">acima</span>';
-      const buy = q.deepLink ?? input.links.googleFlights;
+      const buy = q.buy?.decolar ?? input.links.decolar;
+      const kayak = q.buy?.kayak ?? input.links.kayak;
       return `<tr>
         <td>${i + 1}</td>
         <td class="price">${esc(money(q.price, q.currency))}</td>
-        <td>${esc(q.airline ?? "—")}</td>
-        <td>${esc(q.departures.join(" · ") || "—")}</td>
+        <td>${esc(q.airline ?? "—")}${q.flightNumber ? esc(q.flightNumber) : ""}</td>
+        <td>${esc(q.flightDate)} · ${esc(q.departures.join(" · ") || "—")}</td>
         <td>${ok}</td>
-        <td><a href="${esc(buy)}" target="_blank" rel="noopener">Abrir oferta</a></td>
+        <td>
+          <a href="${esc(buy)}" target="_blank" rel="noopener">Decolar</a>
+          · <a href="${esc(kayak)}" target="_blank" rel="noopener">Kayak</a>
+        </td>
       </tr>`;
     })
     .join("\n");

@@ -4,7 +4,7 @@ import { searchPrices } from "../lib/prices.js";
 
 export default defineTool({
   description:
-    "Search flight prices. Prefer show-deals-board when the user wants a list/dashboard. Returns mode mock|travelpayouts.",
+    "Search flight prices (total for all adults). Prefer show-deals-board for chat lists. Returns mode mock|travelpayouts.",
   effect: "read",
   inputSchema: z.object({
     origin: z.string().min(3).max(3),
@@ -13,36 +13,49 @@ export default defineTool({
     returnDate: z.string().nullable().optional(),
     adults: z.number().int().min(1).max(9).optional().describe("Default 2 for casal"),
     currency: z.string().min(3).max(3).optional(),
-    maxPrice: z.number().positive().optional(),
+    maxPrice: z.number().positive().optional().describe("Total ceiling for all adults"),
+    marginPct: z.number().min(0).max(50).optional(),
+    flexDays: z.number().int().min(0).max(7).optional(),
   }),
   async execute(input) {
+    const adults = input.adults ?? 2;
     const result = await searchPrices({
       origin: input.origin,
       destination: input.destination,
       departDate: input.departDate,
       returnDate: input.returnDate ?? null,
-      adults: input.adults ?? 2,
+      adults,
       currency: (input.currency ?? "BRL").toUpperCase(),
       maxPrice: input.maxPrice,
+      marginPct: input.marginPct,
+      flexDays: input.flexDays,
     });
-    const cheapest = result.quotes[0] ?? null;
+    const pool =
+      result.quotes.length > 0 ? result.quotes : result.nearby;
+    const cheapest = pool[0] ?? null;
     return {
       mode: result.mode,
       note: result.note,
       count: result.quotes.length,
+      nearbyCount: result.nearby.length,
+      ceiling: result.ceiling,
       cheapest,
-      quotes: result.quotes.slice(0, 10).map((q) => ({
+      quotes: pool.slice(0, 10).map((q) => ({
         price: q.price,
+        pricePerAdult: q.pricePerAdult,
         currency: q.currency,
         airline: q.airline,
+        flightNumber: q.flightNumber,
+        flightDate: q.flightDate,
         departures: q.departures,
-        deepLink: q.deepLink,
+        transfers: q.transfers,
+        buy: q.buy,
         source: q.source,
       })),
       buyLinks: result.links,
       underMax:
-        input.maxPrice != null && cheapest != null
-          ? cheapest.price <= input.maxPrice
+        result.ceiling != null && cheapest != null
+          ? cheapest.price <= result.ceiling
           : null,
     };
   },
