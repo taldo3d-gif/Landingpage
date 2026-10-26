@@ -2,7 +2,7 @@
   const PROMO_POPUP_STORAGE_KEY = "taldo-promo-popup-seen";
   const PROMO_POPUP_DELAY_MS = 2500;
   const DOUBT_BUBBLE_STORAGE_KEY = "taldo-doubt-bubble-dismissed";
-  const DOUBT_BUBBLE_DELAY_MS = 15 * 60 * 1000;
+  const DOUBT_BUBBLE_DELAY_MS = 5 * 60 * 1000;
   const DOUBT_BUBBLE_TEST_DELAY_MS = 2000;
   const WHATSAPP_BASE = "https://wa.me/5511910634551?text=";
   const WHATSAPP_10 =
@@ -278,9 +278,12 @@
     }
 
     function getDoubtDelayMs() {
-      const customMs = Number(getUrlParam("doubt_ms"));
-      if (Number.isFinite(customMs) && customMs >= 0) {
-        return customMs;
+      const raw = getUrlParam("doubt_ms");
+      if (raw !== null && raw !== "") {
+        const customMs = Number(raw);
+        if (Number.isFinite(customMs) && customMs >= 0) {
+          return customMs;
+        }
       }
       return isDoubtTestMode() ? DOUBT_BUBBLE_TEST_DELAY_MS : DOUBT_BUBBLE_DELAY_MS;
     }
@@ -332,7 +335,7 @@
       if (!doubtShownTracked) {
         doubtShownTracked = true;
         trackEvent("whatsapp_doubt_bubble_shown", {
-          cta_label: "bolha-duvida-15min",
+          cta_label: "bolha-duvida-5min",
           delay_ms: String(getDoubtDelayMs()),
         });
       }
@@ -373,7 +376,7 @@
       doubtCta.addEventListener("click", () => {
         markDoubtDismissed();
         trackEvent("whatsapp_doubt_click", {
-          cta_label: "bolha-duvida-15min",
+          cta_label: "bolha-duvida-5min",
         });
       });
     }
