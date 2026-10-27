@@ -6,9 +6,8 @@ function yymmdd(isoDate: string): string {
 }
 
 /**
- * Google Flights link using the classic `#flt=` hash.
- * Opens the results UI in a real browser (prices load client-side).
- * Prefer Decolar/Kayak when you need prices visible immediately.
+ * Google Flights — prefer query string (survives reload better than #flt= alone).
+ * Prices still load client-side in a real browser.
  */
 function googleFlightsResultsUrl(input: {
   origin: string;
@@ -21,15 +20,19 @@ function googleFlightsResultsUrl(input: {
   const d = input.destination.toUpperCase();
   const adults = Math.max(1, Math.min(9, input.adults));
   const flt = input.returnDate
-    ? `${o}.${d}.${input.departDate}*${d}.${o}.${input.returnDate};c:BRL;e:1;sd:1;t:f;tt:o;sp:2;sc:b`
-    : `${o}.${d}.${input.departDate};c:BRL;e:1;sd:1;t:f;tt:o;sp:2;sc:b`;
-  // `sp` is not official; adults also mirrored in q= for the empty-form fallback.
+    ? `${o}.${d}.${input.departDate}*${d}.${o}.${input.returnDate};c:BRL;e:1;sd:1;t:f`
+    : `${o}.${d}.${input.departDate};c:BRL;e:1;sd:1;t:f`;
   const q = input.returnDate
-    ? `Flights from ${o} to ${d} on ${input.departDate} returning ${input.returnDate} ${adults} adults`
-    : `Flights from ${o} to ${d} on ${input.departDate} one way ${adults} adults`;
+    ? `Voos de ${o} para ${d} em ${input.departDate} voltando ${input.returnDate} ${adults} adultos`
+    : `Voos de ${o} para ${d} em ${input.departDate} só ida ${adults} adultos`;
   return `https://www.google.com/travel/flights?hl=pt-BR&gl=br&curr=BRL&q=${encodeURIComponent(q)}#flt=${flt}`;
 }
 
+/**
+ * Build trusted checkout search URLs.
+ * Decolar needs the full `/NA/.../NA` path or reload drops into an empty search.
+ * Kayak adults go in the path (`/2adults`), not only `?adults=`.
+ */
 export function buildBuyLinks(input: {
   origin: string;
   destination: string;
@@ -50,8 +53,12 @@ export function buildBuyLinks(input: {
     adults,
   });
 
-  const kayakPath = ret ? `${o}-${d}/${input.departDate}/${ret}` : `${o}-${d}/${input.departDate}`;
-  const kayak = `https://www.kayak.com.br/flights/${kayakPath}?sort=price_a&adults=${adults}`;
+  // Kayak BR: adults in path survive reload; query-only gets stripped on redirect.
+  const kayakAdults = adults === 1 ? "" : `/${adults}adults`;
+  const kayakPath = ret
+    ? `${o}-${d}/${input.departDate}/${ret}${kayakAdults}`
+    : `${o}-${d}/${input.departDate}${kayakAdults}`;
+  const kayak = `https://www.kayak.com.br/flights/${kayakPath}?sort=price_a`;
 
   const skyOut = yymmdd(input.departDate);
   const skyRet = ret ? yymmdd(ret) : "";
@@ -59,10 +66,13 @@ export function buildBuyLinks(input: {
     ? `https://www.skyscanner.com.br/transporte/voos/${o.toLowerCase()}/${d.toLowerCase()}/${skyOut}/${skyRet}/?adults=${adults}&adultsv2=${adults}&cabinclass=economy&rtn=1&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false`
     : `https://www.skyscanner.com.br/transporte/voos/${o.toLowerCase()}/${d.toLowerCase()}/${skyOut}/?adults=${adults}&adultsv2=${adults}&cabinclass=economy&rtn=0&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false`;
 
-  const tripType = ret ? "roundtrip" : "oneway";
-  const decolarDates = ret ? `${input.departDate}/${ret}` : input.departDate;
-  // Results page (sorted by price) — shows fares in the browser.
-  const decolar = `https://www.decolar.com/shop/flights/results/${tripType}/${o}/${d}/${decolarDates}/${adults}/0/0/?from=SB&sort=price_asc`;
+  // Decolar/Despegar documented results path (NA placeholders required).
+  // oneway:  /oneway/O/D/DATE/A/C/I/NA/CABIN/NA/NA
+  // roundtrip: /roundtrip/O/D/OUT/IN/A/C/I/NA/NA/CABIN/NA/NA
+  const cabin = "NA"; // economy
+  const decolar = ret
+    ? `https://www.decolar.com/shop/flights/results/roundtrip/${o}/${d}/${input.departDate}/${ret}/${adults}/0/0/NA/NA/${cabin}/NA/NA?from=SB&sort=price_asc`
+    : `https://www.decolar.com/shop/flights/results/oneway/${o}/${d}/${input.departDate}/${adults}/0/0/NA/${cabin}/NA/NA?from=SB&sort=price_asc`;
 
   return { googleFlights, kayak, skyscanner, decolar };
 }
