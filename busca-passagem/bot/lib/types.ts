@@ -12,6 +12,8 @@ export type FlightWatch = {
   marginPct: number;
   /** Accept flights within ±flexDays of departDate. Default 0 (exact). */
   flexDays: number;
+  /** Only nonstop flights (transfers === 0). */
+  directOnly: boolean;
   currency: string;
   adults: number;
   active: boolean;

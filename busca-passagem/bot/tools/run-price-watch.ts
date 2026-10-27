@@ -42,6 +42,7 @@ export default defineTool({
     for (const watch of watches) {
       const marginPct = watch.marginPct ?? 15;
       const flexDays = watch.flexDays ?? 0;
+      const directOnly = watch.directOnly ?? false;
       const ceiling = effectiveCeiling(watch.maxPrice, marginPct);
       const search = await searchPrices({
         origin: watch.origin,
@@ -53,6 +54,7 @@ export default defineTool({
         maxPrice: watch.maxPrice,
         marginPct,
         flexDays,
+        directOnly,
       });
       const pool =
         search.quotes.length > 0 ? search.quotes : search.nearby;
@@ -93,28 +95,29 @@ export default defineTool({
 
       const route = `${watch.origin}→${watch.destination} pedido ${watch.departDate}${
         watch.returnDate ? ` / ${watch.returnDate}` : ""
-      } (${watch.adults} pax)`;
+      } (${watch.adults} pax${directOnly ? ", so direto" : ""})`;
       const priceLine = cheapest
         ? `Menor: ${cheapest.pricePerAdult} ${cheapest.currency}/pessoa` +
-          ` (${cheapest.price} total × ${watch.adults})` +
+          ` (${cheapest.price} o casal)` +
           (cheapest.airline
             ? ` ${cheapest.airline}${cheapest.flightNumber ?? ""}`
             : "") +
-          ` data ${cheapest.flightDate}`
-        : "Sem cotação — confira nos links.";
+          ` ${cheapest.flightDate}` +
+          (cheapest.returnDate ? ` ↺ ${cheapest.returnDate}` : "")
+        : "Sem cotacao direta no momento.";
       const topLines = pool.slice(0, 5).map((q, i) => {
         return (
           `${i + 1}) ${q.pricePerAdult} ${q.currency}/pessoa` +
-          ` (${q.price} total) · ${q.flightDate}` +
-          (q.airline ? ` · ${q.airline}${q.flightNumber ?? ""}` : "") +
-          (q.departures[0] ? ` · ${q.departures[0]}` : "")
+          ` (${q.price} casal) · ${q.flightDate}` +
+          (q.returnDate ? ` ↺ ${q.returnDate}` : "") +
+          (q.airline ? ` · ${q.airline}${q.flightNumber ?? ""}` : "")
         );
       });
       const buy = cheapest?.buy ?? search.links;
       const text = [
         underMax ? "Preco abaixo do teto/pessoa (com margem)" : "Atualizacao de preco",
         route,
-        `Teto: ${watch.maxPrice} ${watch.currency}/pessoa (margem ${marginPct}% → ${ceiling}/pessoa)`,
+        `Teto: ${watch.maxPrice} ${watch.currency}/pessoa ida+volta (margem ${marginPct}% → ${ceiling}/pessoa)`,
         priceLine,
         ...topLines,
         "",

@@ -38,11 +38,7 @@ function mockQuotes(input: {
   maxPrice?: number;
   currency: string;
 }): PriceQuote[] {
-  // maxPrice is per adult
-  const perAdult = Math.max(
-    220,
-    Math.round((input.maxPrice ?? 1500) * 0.72),
-  );
+  const perAdult = Math.max(220, Math.round((input.maxPrice ?? 1500) * 0.72));
   const buy = buildBuyLinks(input);
   return [
     {
@@ -70,6 +66,11 @@ type RawRow = {
   transfers?: number;
 };
 
+function passesDirect(row: RawRow, directOnly: boolean): boolean {
+  if (!directOnly) return true;
+  return row.transfers === 0;
+}
+
 function toQuotes(
   rows: RawRow[],
   input: {
@@ -80,7 +81,7 @@ function toQuotes(
     adults: number;
     currency: string;
     flexDays: number;
-    /** If true, keep any date in the fetched set (still sorted by price). */
+    directOnly: boolean;
     anyDate?: boolean;
   },
 ): PriceQuote[] {
@@ -88,6 +89,7 @@ function toQuotes(
   const out: PriceQuote[] = [];
   for (const row of rows) {
     if (typeof row.price !== "number" || !row.departure_at) continue;
+    if (!passesDirect(row, input.directOnly)) continue;
     const flightDate = dayOnly(row.departure_at);
     if (!input.anyDate && !withinFlex(flightDate, input.departDate, input.flexDays)) {
       continue;
@@ -110,8 +112,7 @@ function toQuotes(
       returnDate: ret,
       adults,
     });
-    const fn =
-      row.flight_number != null ? String(row.flight_number) : null;
+    const fn = row.flight_number != null ? String(row.flight_number) : null;
     out.push({
       price,
       pricePerAdult,
@@ -139,7 +140,9 @@ async function fetchPricesForDates(input: {
   returnDate?: string | null;
   currency: string;
   token: string;
+  oneWay?: boolean;
 }): Promise<RawRow[]> {
+  const oneWay = input.oneWay ?? !input.returnDate;
   const params = new URLSearchParams({
     origin: input.origin.toUpperCase(),
     destination: input.destination.toUpperCase(),
@@ -148,11 +151,11 @@ async function fetchPricesForDates(input: {
     market: process.env.TRAVELPAYOUTS_MARKET ?? "br",
     sorting: "price",
     limit: "50",
-    one_way: input.returnDate ? "false" : "true",
+    one_way: oneWay ? "true" : "false",
     unique: "false",
     token: input.token,
   });
-  if (input.returnDate) params.set("return_at", input.returnDate);
+  if (!oneWay && input.returnDate) params.set("return_at", input.returnDate);
 
   const res = await fetch(
     `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?${params}`,
@@ -165,10 +168,138 @@ async function fetchPricesForDates(input: {
   return json.data ?? [];
 }
 
+/** Compose RT from cheapest matching one-way outbound + inbound (both direct when asked). */
+async function composeRoundTrip(input: {
+  origin: string;
+  destination: string;
+  departDate: string;
+  returnDate: string;
+  adults: number;
+  currency: string;
+  flexDays: number;
+  directOnly: boolean;
+  token: string;
+  anyDate: boolean;
+}): Promise<PriceQuote[]> {
+  const adults = Math.max(1, input.adults);
+  const outMonth = input.departDate.slice(0, 7);
+  const retMonth = input.returnDate.slice(0, 7);
+
+  const [rawOutDay, rawOutMonth, rawRetDay, rawRetMonth] = await Promise.all([
+    fetchPricesForDates({
+      origin: input.origin,
+      destination: input.destination,
+      departDate: input.departDate,
+      currency: input.currency,
+      token: input.token,
+      oneWay: true,
+    }),
+    fetchPricesForDates({
+      origin: input.origin,
+      destination: input.destination,
+      departDate: outMonth,
+      currency: input.currency,
+      token: input.token,
+      oneWay: true,
+    }),
+    fetchPricesForDates({
+      origin: input.destination,
+      destination: input.origin,
+      departDate: input.returnDate,
+      currency: input.currency,
+      token: input.token,
+      oneWay: true,
+    }),
+    fetchPricesForDates({
+      origin: input.destination,
+      destination: input.origin,
+      departDate: retMonth,
+      currency: input.currency,
+      token: input.token,
+      oneWay: true,
+    }),
+  ]);
+
+  const outRows = [...rawOutDay, ...rawOutMonth];
+  const retRows = [...rawRetDay, ...rawRetMonth];
+
+  const outs = toQuotes(outRows, {
+    origin: input.origin,
+    destination: input.destination,
+    departDate: input.departDate,
+    returnDate: null,
+    adults: 1, // per-adult legs; we re-multiply below
+    currency: input.currency,
+    flexDays: input.anyDate ? 31 : input.flexDays,
+    directOnly: input.directOnly,
+    anyDate: input.anyDate,
+  });
+  const rets = toQuotes(retRows, {
+    origin: input.destination,
+    destination: input.origin,
+    departDate: input.returnDate,
+    returnDate: null,
+    adults: 1,
+    currency: input.currency,
+    flexDays: input.anyDate ? 31 : input.flexDays,
+    directOnly: input.directOnly,
+    anyDate: input.anyDate,
+  });
+
+  if (outs.length === 0 || rets.length === 0) return [];
+
+  // Pair top outs with top rets (cheapest combinations).
+  const pairs: PriceQuote[] = [];
+  for (const o of outs.slice(0, 5)) {
+    for (const r of rets.slice(0, 5)) {
+      const pricePerAdult = o.pricePerAdult + r.pricePerAdult;
+      const buy = buildBuyLinks({
+        origin: input.origin,
+        destination: input.destination,
+        departDate: o.flightDate,
+        returnDate: r.flightDate,
+        adults,
+      });
+      const airline =
+        o.airline && r.airline
+          ? o.airline === r.airline
+            ? o.airline
+            : `${o.airline}+${r.airline}`
+          : o.airline ?? r.airline;
+      const flightNumber = [o.flightNumber, r.flightNumber].filter(Boolean).join("/");
+      pairs.push({
+        price: Math.round(pricePerAdult * adults),
+        pricePerAdult,
+        currency: input.currency.toUpperCase(),
+        airline,
+        flightNumber: flightNumber || null,
+        flightDate: o.flightDate,
+        returnDate: r.flightDate,
+        departures: [...o.departures, ...r.departures],
+        transfers: 0,
+        source: "travelpayouts",
+        buy,
+      });
+    }
+  }
+  pairs.sort((a, b) => a.price - b.price);
+  // Dedupe by dates + price
+  const seen = new Set<string>();
+  const uniq: PriceQuote[] = [];
+  for (const p of pairs) {
+    const key = `${p.flightDate}|${p.returnDate}|${p.pricePerAdult}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    uniq.push(p);
+  }
+  return uniq.slice(0, 8);
+}
+
 /**
- * Travelpayouts Data API prices are **per adult** (cache).
- * `maxPrice` is the ceiling **per person**. We still show group total
- * (× adults) and build buy links for each quote’s **exact flight date**.
+ * Travelpayouts prices are **per adult**.
+ * `maxPrice` = ceiling **per person** (ida+volta when returnDate set).
+ * `directOnly` keeps transfers === 0.
+ * Round-trips: try RT cache first; if empty, compose OW ida + OW volta.
  */
 export async function searchPrices(input: {
   origin: string;
@@ -176,39 +307,35 @@ export async function searchPrices(input: {
   departDate: string;
   returnDate?: string | null;
   adults: number;
-  /** Ceiling per adult (not group total). */
   maxPrice?: number;
-  /** Extra headroom above maxPrice per adult, percent. Default 15. */
   marginPct?: number;
-  /** ± days around departDate. Default 0. */
   flexDays?: number;
+  /** Only nonstop (transfers === 0). Default false. */
+  directOnly?: boolean;
   currency: string;
 }): Promise<{
   quotes: PriceQuote[];
   underCeiling: PriceQuote[];
-  /** Same month, other days — only when exact/flex window is empty. */
   nearby: PriceQuote[];
   mode: "travelpayouts" | "mock";
   links: BuyLinks;
   note: string;
-  /** Effective max per adult after margin. */
   ceiling: number | null;
-  /** ceiling × adults (what the couple pays at the cap). */
   ceilingTotal: number | null;
   marginPct: number;
   flexDays: number;
+  directOnly: boolean;
 }> {
   const adults = Math.max(1, input.adults);
   const marginPct = input.marginPct ?? 15;
   const flexDays = input.flexDays ?? 0;
+  const directOnly = input.directOnly ?? false;
   const ceiling = effectiveCeiling(input.maxPrice, marginPct);
   const ceilingTotal = ceiling == null ? null : ceiling * adults;
   const links = buildBuyLinks({ ...input, adults });
 
   const under = (list: PriceQuote[]) =>
-    ceiling == null
-      ? list
-      : list.filter((q) => q.pricePerAdult <= ceiling);
+    ceiling == null ? list : list.filter((q) => q.pricePerAdult <= ceiling);
 
   if (!travelpayoutsConfigured()) {
     const quotes = mockQuotes({ ...input, adults });
@@ -223,43 +350,89 @@ export async function searchPrices(input: {
       ceilingTotal,
       marginPct,
       flexDays,
+      directOnly,
     };
   }
 
   const token = process.env.TRAVELPAYOUTS_TOKEN!.trim();
   const month = input.departDate.slice(0, 7);
+  const base = { ...input, adults, flexDays, directOnly };
 
-  // 1) Exact / flex window (prefer day-specific API call first).
-  let raw = await fetchPricesForDates({ ...input, token });
-  let quotes = toQuotes(raw, { ...input, adults, flexDays });
-
-  // 2) Month scan if empty — still filter to flex/exact day for `quotes`.
-  let rawMonth: RawRow[] | null = null;
-  if (quotes.length === 0) {
-    rawMonth = await fetchPricesForDates({
-      ...input,
-      departDate: month,
-      token,
-    });
-    quotes = toQuotes(rawMonth, { ...input, adults, flexDays });
-  }
-
-  // 3) Nearby alternatives in the same month (real dates + matching links).
+  let quotes: PriceQuote[] = [];
   let nearby: PriceQuote[] = [];
-  if (quotes.length === 0) {
-    if (!rawMonth) {
+
+  if (input.returnDate) {
+    // 1) Combined RT cache for exact/flex window
+    let raw = await fetchPricesForDates({ ...input, token });
+    quotes = toQuotes(raw, { ...base, returnDate: input.returnDate });
+
+    if (quotes.length === 0) {
+      const rawMonth = await fetchPricesForDates({
+        ...input,
+        departDate: month,
+        token,
+      });
+      quotes = toQuotes(rawMonth, { ...base, returnDate: input.returnDate });
+    }
+
+    // 2) Compose from one-ways (needed when RT cache empty — common on BR domestic)
+    if (quotes.length === 0) {
+      quotes = await composeRoundTrip({
+        origin: input.origin,
+        destination: input.destination,
+        departDate: input.departDate,
+        returnDate: input.returnDate,
+        adults,
+        currency: input.currency,
+        flexDays,
+        directOnly,
+        token,
+        anyDate: false,
+      });
+    }
+
+    if (quotes.length === 0) {
+      nearby = await composeRoundTrip({
+        origin: input.origin,
+        destination: input.destination,
+        departDate: input.departDate,
+        returnDate: input.returnDate,
+        adults,
+        currency: input.currency,
+        flexDays,
+        directOnly,
+        token,
+        anyDate: true,
+      });
+    }
+  } else {
+    let raw = await fetchPricesForDates({ ...input, token });
+    quotes = toQuotes(raw, { ...base, returnDate: null });
+
+    let rawMonth: RawRow[] | null = null;
+    if (quotes.length === 0) {
       rawMonth = await fetchPricesForDates({
         ...input,
         departDate: month,
         token,
       });
+      quotes = toQuotes(rawMonth, { ...base, returnDate: null });
     }
-    nearby = toQuotes(rawMonth, {
-      ...input,
-      adults,
-      flexDays: 0,
-      anyDate: true,
-    }).slice(0, 8);
+
+    if (quotes.length === 0) {
+      if (!rawMonth) {
+        rawMonth = await fetchPricesForDates({
+          ...input,
+          departDate: month,
+          token,
+        });
+      }
+      nearby = toQuotes(rawMonth, {
+        ...base,
+        returnDate: null,
+        anyDate: true,
+      }).slice(0, 8);
+    }
   }
 
   return {
@@ -269,12 +442,13 @@ export async function searchPrices(input: {
     mode: "travelpayouts",
     links,
     note:
-      `Teto = por pessoa (margem ${marginPct}% → ${ceiling ?? "—"}/adulto). ` +
-      `Total mostrado = × ${adults}. Cada link usa a DATA DO ITEM. ` +
-      `Confira na Decolar/Kayak antes de pagar (cache pode variar).`,
+      `Teto = por pessoa ida+volta (margem ${marginPct}% → ${ceiling ?? "—"}/adulto). ` +
+      (directOnly ? "Somente voo DIRETO. " : "") +
+      `Total = × ${adults}. Links na DATA DO ITEM. Confira na Decolar/Kayak.`,
     ceiling,
     ceilingTotal,
     marginPct,
     flexDays,
+    directOnly,
   };
 }

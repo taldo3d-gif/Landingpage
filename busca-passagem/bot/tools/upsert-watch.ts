@@ -5,7 +5,7 @@ import type { FlightWatch } from "../lib/types.js";
 
 export default defineTool({
   description:
-    "Create or update a flight price watch. maxPrice is PER PERSON (e.g. 1500 = R$1500/adulto). marginPct allows a bit above (default 15).",
+    "Create or update a flight price watch. maxPrice is PER PERSON for the trip (ida+volta if returnDate). directOnly=true keeps nonstop only. marginPct default 15.",
   effect: "idempotent",
   inputSchema: z.object({
     id: z.string().optional(),
@@ -13,9 +13,13 @@ export default defineTool({
     destination: z.string().min(3).max(3),
     departDate: z.string(),
     returnDate: z.string().nullable().optional(),
-    maxPrice: z.number().positive().describe("Ceiling PER PERSON (not group total)"),
+    maxPrice: z.number().positive().describe("Ceiling PER PERSON (ida+volta)"),
     marginPct: z.number().min(0).max(50).optional().describe("Default 15"),
     flexDays: z.number().int().min(0).max(7).optional().describe("Default 0 exact date"),
+    directOnly: z
+      .boolean()
+      .optional()
+      .describe("If true, only nonstop (transfers=0)"),
     currency: z.string().min(3).max(3).optional(),
     adults: z.number().int().min(1).max(9).optional(),
     active: z.boolean().optional(),
@@ -32,6 +36,7 @@ export default defineTool({
       maxPrice: input.maxPrice,
       marginPct: input.marginPct ?? 15,
       flexDays: input.flexDays ?? 0,
+      directOnly: input.directOnly ?? false,
       currency: (input.currency ?? "BRL").toUpperCase(),
       adults: input.adults ?? 2,
       active: input.active ?? true,
@@ -55,6 +60,7 @@ export default defineTool({
       maxPrice: input.maxPrice,
       marginPct: input.marginPct ?? existing?.marginPct ?? 15,
       flexDays: input.flexDays ?? existing?.flexDays ?? 0,
+      directOnly: input.directOnly ?? existing?.directOnly ?? false,
       currency: (input.currency ?? existing?.currency ?? "BRL").toUpperCase(),
       adults: input.adults ?? existing?.adults ?? 2,
       active: input.active ?? existing?.active ?? true,

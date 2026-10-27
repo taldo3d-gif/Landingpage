@@ -14,10 +14,11 @@ Padrão: **2 adultos**. Português do Brasil.
 
 ## Preço e links (regra dura)
 
-- `maxPrice` / teto = **por pessoa** (ex.: 1500 = R$1500/adulto). Margem padrão **15%**.
-- Cada item mostra **R$/pessoa** e o **total do casal** (× adultos), mais a **data real do voo**.
-- Links Decolar/Kayak do item usam **essa mesma data** — nunca uma data genérica do pedido.
-- Se a data pedida vier vazia, a tool pode listar **datas próximas** com preço e link batendo.
+- `maxPrice` / teto = **por pessoa** na viagem (ida+volta se houver returnDate). Margem **15%**.
+- `directOnly: true` = **somente voo direto** (sem escala).
+- Cada item mostra **R$/pessoa** e o **total do casal**, com as **datas reais**.
+- Links Decolar/Kayak do item usam **essas mesmas datas**.
+- Se a data pedida vier vazia, lista **datas próximas** com preço e link batendo.
 
 ## O que mostrar (e só isso)
 

@@ -38,6 +38,7 @@ export async function getWatch(
     maxPrice: w.maxPrice,
     marginPct: typeof w.marginPct === "number" ? w.marginPct : 15,
     flexDays: typeof w.flexDays === "number" ? w.flexDays : 0,
+    directOnly: w.directOnly ?? false,
     currency: w.currency ?? "BRL",
     adults: typeof w.adults === "number" ? w.adults : 2,
     active: w.active ?? true,

@@ -16,9 +16,14 @@ function money(price: number, currency: string): string {
 }
 
 function formatQuote(q: PriceQuote, i: number, adults: number): string {
-  const when = q.departures[0] ? ` · sai ${q.departures[0]}` : "";
+  const whenOut = q.departures[0] ? ` · ida ${q.departures[0]}` : "";
+  const whenRet = q.departures[1] ? ` · volta ${q.departures[1]}` : "";
+  const dates =
+    q.returnDate != null
+      ? ` · ${q.flightDate} ↺ ${q.returnDate}`
+      : ` · data ${q.flightDate}`;
   const cia = q.airline
-    ? ` · ${q.airline}${q.flightNumber ?? ""}`
+    ? ` · ${q.airline}${q.flightNumber ? " " + q.flightNumber : ""}`
     : "";
   const stops =
     q.transfers == null
@@ -28,10 +33,10 @@ function formatQuote(q: PriceQuote, i: number, adults: number): string {
         : ` · ${q.transfers} parada(s)`;
   const total =
     adults > 1
-      ? ` → ${money(q.price, q.currency)} total (${adults} pax)`
+      ? ` → ${money(q.price, q.currency)} o casal`
       : "";
   return (
-    `${i + 1}. ${money(q.pricePerAdult, q.currency)}/pessoa${total}${cia}${stops} · data ${q.flightDate}${when}\n` +
+    `${i + 1}. ${money(q.pricePerAdult, q.currency)}/pessoa${total}${cia}${stops}${dates}${whenOut}${whenRet}\n` +
     `   Decolar: ${q.buy.decolar}\n` +
     `   Kayak: ${q.buy.kayak}`
   );
@@ -39,7 +44,7 @@ function formatQuote(q: PriceQuote, i: number, adults: number): string {
 
 export default defineTool({
   description:
-    "Search real fares. maxPrice is PER PERSON. Shows $/pessoa + group total. Each item has Decolar/Kayak for THAT flight date. Supports margin. If exact day empty, returns nearby month dates with matching links.",
+    "Search real fares. maxPrice PER PERSON (ida+volta). directOnly=true for nonstop only. Shows $/pessoa + couple total + Decolar/Kayak for the quote dates.",
   effect: "read",
   inputSchema: z.object({
     origin: z.string().min(3).max(3),
@@ -52,26 +57,20 @@ export default defineTool({
       .number()
       .positive()
       .optional()
-      .describe("Ceiling PER PERSON (e.g. 1500 = R$1500/adulto)"),
-    marginPct: z
-      .number()
-      .min(0)
-      .max(50)
+      .describe("Ceiling PER PERSON for the trip (ida+volta)"),
+    marginPct: z.number().min(0).max(50).optional(),
+    flexDays: z.number().int().min(0).max(7).optional(),
+    directOnly: z
+      .boolean()
       .optional()
-      .describe("Allow this % above maxPrice per person (default 15)"),
-    flexDays: z
-      .number()
-      .int()
-      .min(0)
-      .max(7)
-      .optional()
-      .describe("Accept flights ±N days (default 0 = exact date)"),
+      .describe("Only nonstop flights (default false)"),
   }),
   async execute(input) {
     const adults = input.adults ?? 2;
     const currency = (input.currency ?? "BRL").toUpperCase();
     const marginPct = input.marginPct ?? 15;
     const flexDays = input.flexDays ?? 0;
+    const directOnly = input.directOnly ?? false;
     const result = await searchPrices({
       origin: input.origin,
       destination: input.destination,
@@ -82,6 +81,7 @@ export default defineTool({
       maxPrice: input.maxPrice,
       marginPct,
       flexDays,
+      directOnly,
     });
 
     const primary =
@@ -91,20 +91,19 @@ export default defineTool({
           ? result.quotes
           : result.nearby;
     const quotes = primary.slice(0, 5);
-    const cheapest = quotes[0] ?? null;
     const usingNearby =
       result.underCeiling.length === 0 &&
       result.quotes.length === 0 &&
       result.nearby.length > 0;
 
     const headerLabel = usingNearby
-      ? `Sem voo em ${input.departDate} no cache — datas próximas no mês (cada link = data do item):`
+      ? `Sem direto nas datas exatas no cache — combinações próximas (só direto=${directOnly}):`
       : result.underCeiling.length > 0
-        ? "Dentro do teto por pessoa (com margem):"
+        ? "Dentro do teto/pessoa (com margem):"
         : result.quotes.length > 0
-          ? "Nada dentro do teto/pessoa — mais baratos na data pedida:"
-          : `Nenhum voo na data ${input.departDate}` +
-            (flexDays ? ` (±${flexDays}d)` : "") +
+          ? "Nada dentro do teto — melhores diretos encontrados:"
+          : `Nenhum voo direto ${input.departDate}` +
+            (input.returnDate ? ` ↺ ${input.returnDate}` : "") +
             ".";
 
     const priceLines =
@@ -114,23 +113,20 @@ export default defineTool({
 
     const tetoLine =
       input.maxPrice != null
-        ? ` · teto ${money(input.maxPrice, currency)}/pessoa` +
-          ` (margem ${marginPct}% → até ${money(result.ceiling ?? input.maxPrice, currency)}/pessoa` +
-          (result.ceilingTotal != null
-            ? `, ${money(result.ceilingTotal, currency)} o casal`
-            : "") +
-          `)`
+        ? ` · teto ${money(input.maxPrice, currency)}/pessoa ida+volta` +
+          ` (margem ${marginPct}% → ${money(result.ceiling ?? input.maxPrice, currency)}/pessoa)`
         : "";
 
     const chatMarkdown = [
-      `${input.origin.toUpperCase()} → ${input.destination.toUpperCase()} · pedido ${input.departDate}` +
+      `${input.origin.toUpperCase()} → ${input.destination.toUpperCase()} · ${input.departDate}` +
         (input.returnDate ? ` ↺ ${input.returnDate}` : "") +
         ` · ${adults} adulto(s)` +
+        (directOnly ? " · SÓ DIRETO" : "") +
         tetoLine,
       "",
       ...priceLines,
       "",
-      "Abra Decolar ou Kayak do item — a data do link é a do preço.",
+      "Abra Decolar/Kayak do item — confira o total antes de pagar.",
     ].join("\n");
 
     return {
@@ -139,11 +135,12 @@ export default defineTool({
       underCeilingCount: result.underCeiling.length,
       nearbyCount: result.nearby.length,
       usingNearby,
-      cheapest,
+      cheapest: quotes[0] ?? null,
       ceiling: result.ceiling,
       ceilingTotal: result.ceilingTotal,
       marginPct,
       flexDays,
+      directOnly,
       chatMarkdown,
       note: result.note,
     };
