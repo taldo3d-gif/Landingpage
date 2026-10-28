@@ -58,7 +58,7 @@ export function renderDealsBoardHtml(input: {
       const kayak = q.buy?.kayak ?? input.links.kayak;
       return `<tr>
         <td>${i + 1}</td>
-        <td class="price">${esc(money(q.pricePerAdult, q.currency))}/pessoa<br/><small>${esc(money(q.price, q.currency))} total</small></td>
+        <td class="price">${esc(money(q.pricePerAdult, q.currency))}/pessoa<br/><small>${esc(money(q.price, q.currency))} total</small>${q.durationMinutes != null ? `<br/><small>${q.durationMinutes} min</small>` : ""}</td>
         <td>${esc(q.airline ?? "—")}${q.flightNumber ? esc(q.flightNumber) : ""}</td>
         <td>${esc(q.flightDate)} · ${esc(q.departures.join(" · ") || "—")}</td>
         <td>${ok}</td>

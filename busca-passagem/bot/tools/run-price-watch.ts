@@ -43,6 +43,7 @@ export default defineTool({
       const marginPct = watch.marginPct ?? 15;
       const flexDays = watch.flexDays ?? 0;
       const directOnly = watch.directOnly ?? false;
+      const maxLayoverMinutes = watch.maxLayoverMinutes ?? 180;
       const ceiling = effectiveCeiling(watch.maxPrice, marginPct);
       const search = await searchPrices({
         origin: watch.origin,
@@ -55,6 +56,7 @@ export default defineTool({
         marginPct,
         flexDays,
         directOnly,
+        maxLayoverMinutes,
       });
       const pool =
         search.quotes.length > 0 ? search.quotes : search.nearby;
@@ -95,7 +97,7 @@ export default defineTool({
 
       const route = `${watch.origin}→${watch.destination} pedido ${watch.departDate}${
         watch.returnDate ? ` / ${watch.returnDate}` : ""
-      } (${watch.adults} pax${directOnly ? ", so direto" : ""})`;
+      } (${watch.adults} pax${directOnly ? ", so direto" : `, escala<=${maxLayoverMinutes}min`})`;
       const priceLine = cheapest
         ? `Menor: ${cheapest.pricePerAdult} ${cheapest.currency}/pessoa` +
           ` (${cheapest.price} o casal)` +
@@ -121,9 +123,9 @@ export default defineTool({
         priceLine,
         ...topLines,
         "",
-        "Comprar (mesma data do item):",
-        `Decolar: ${buy.decolar}`,
+        "Comprar (mesma data do item — prefira Kayak):",
         `Kayak: ${buy.kayak}`,
+        `Decolar: ${buy.decolar}`,
         `Skyscanner: ${buy.skyscanner}`,
         `Google Flights: ${buy.googleFlights}`,
       ]

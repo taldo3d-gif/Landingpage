@@ -17,6 +17,7 @@ export default defineTool({
     marginPct: z.number().min(0).max(50).optional(),
     flexDays: z.number().int().min(0).max(7).optional(),
     directOnly: z.boolean().optional(),
+    maxLayoverMinutes: z.number().int().min(0).max(720).optional(),
   }),
   async execute(input) {
     const adults = input.adults ?? 2;
@@ -31,6 +32,7 @@ export default defineTool({
       marginPct: input.marginPct,
       flexDays: input.flexDays,
       directOnly: input.directOnly,
+      maxLayoverMinutes: input.maxLayoverMinutes,
     });
     const pool =
       result.quotes.length > 0 ? result.quotes : result.nearby;

@@ -5,7 +5,7 @@ import type { FlightWatch } from "../lib/types.js";
 
 export default defineTool({
   description:
-    "Create or update a flight price watch. maxPrice is PER PERSON for the trip (ida+volta if returnDate). directOnly=true keeps nonstop only. marginPct default 15.",
+    "Create or update a flight price watch. maxPrice PER PERSON (ida+volta). directOnly or maxLayoverMinutes (default 180=3h, 1 stop ok).",
   effect: "idempotent",
   inputSchema: z.object({
     id: z.string().optional(),
@@ -20,6 +20,13 @@ export default defineTool({
       .boolean()
       .optional()
       .describe("If true, only nonstop (transfers=0)"),
+    maxLayoverMinutes: z
+      .number()
+      .int()
+      .min(0)
+      .max(720)
+      .optional()
+      .describe("Max layover minutes when not directOnly (default 180)"),
     currency: z.string().min(3).max(3).optional(),
     adults: z.number().int().min(1).max(9).optional(),
     active: z.boolean().optional(),
@@ -37,6 +44,7 @@ export default defineTool({
       marginPct: input.marginPct ?? 15,
       flexDays: input.flexDays ?? 0,
       directOnly: input.directOnly ?? false,
+      maxLayoverMinutes: input.maxLayoverMinutes ?? 180,
       currency: (input.currency ?? "BRL").toUpperCase(),
       adults: input.adults ?? 2,
       active: input.active ?? true,
@@ -61,6 +69,8 @@ export default defineTool({
       marginPct: input.marginPct ?? existing?.marginPct ?? 15,
       flexDays: input.flexDays ?? existing?.flexDays ?? 0,
       directOnly: input.directOnly ?? existing?.directOnly ?? false,
+      maxLayoverMinutes:
+        input.maxLayoverMinutes ?? existing?.maxLayoverMinutes ?? 180,
       currency: (input.currency ?? existing?.currency ?? "BRL").toUpperCase(),
       adults: input.adults ?? existing?.adults ?? 2,
       active: input.active ?? existing?.active ?? true,

@@ -12,8 +12,13 @@ export type FlightWatch = {
   marginPct: number;
   /** Accept flights within ±flexDays of departDate. Default 0 (exact). */
   flexDays: number;
-  /** Only nonstop flights (transfers === 0). */
+  /** Only nonstop flights (transfers === 0). If false, maxLayoverMinutes applies. */
   directOnly: boolean;
+  /**
+   * Max connection wait in minutes (default 180 = 3h).
+   * Used when directOnly is false; allows 0–1 stop with short layover.
+   */
+  maxLayoverMinutes: number;
   currency: string;
   adults: number;
   active: boolean;
@@ -34,6 +39,8 @@ export type PriceQuote = {
   returnDate: string | null;
   departures: string[];
   transfers: number | null;
+  /** Outbound duration minutes (block time + layover), when known. */
+  durationMinutes: number | null;
   source: "travelpayouts" | "mock";
   /** Trusted buy links for THIS flight date (not a generic search). */
   buy: {

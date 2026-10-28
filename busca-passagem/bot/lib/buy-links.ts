@@ -6,8 +6,7 @@ function yymmdd(isoDate: string): string {
 }
 
 /**
- * Google Flights — prefer query string (survives reload better than #flt= alone).
- * Prices still load client-side in a real browser.
+ * Google Flights — query + #flt= hash.
  */
 function googleFlightsResultsUrl(input: {
   origin: string;
@@ -29,9 +28,8 @@ function googleFlightsResultsUrl(input: {
 }
 
 /**
- * Build trusted checkout search URLs.
- * Decolar needs the full `/NA/.../NA` path or reload drops into an empty search.
- * Kayak adults go in the path (`/2adults`), not only `?adults=`.
+ * Trusted checkout URLs.
+ * Prefer Kayak — Decolar often 404s/blocks deep links; use reSearch+di format.
  */
 export function buildBuyLinks(input: {
   origin: string;
@@ -53,7 +51,6 @@ export function buildBuyLinks(input: {
     adults,
   });
 
-  // Kayak BR: adults in path survive reload; query-only gets stripped on redirect.
   const kayakAdults = adults === 1 ? "" : `/${adults}adults`;
   const kayakPath = ret
     ? `${o}-${d}/${input.departDate}/${ret}${kayakAdults}`
@@ -66,21 +63,18 @@ export function buildBuyLinks(input: {
     ? `https://www.skyscanner.com.br/transporte/voos/${o.toLowerCase()}/${d.toLowerCase()}/${skyOut}/${skyRet}/?adults=${adults}&adultsv2=${adults}&cabinclass=economy&rtn=1&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false`
     : `https://www.skyscanner.com.br/transporte/voos/${o.toLowerCase()}/${d.toLowerCase()}/${skyOut}/?adults=${adults}&adultsv2=${adults}&cabinclass=economy&rtn=0&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false`;
 
-  // Decolar/Despegar documented results path (NA placeholders required).
-  // oneway:  /oneway/O/D/DATE/A/C/I/NA/CABIN/NA/NA
-  // roundtrip: /roundtrip/O/D/OUT/IN/A/C/I/NA/NA/CABIN/NA/NA
-  const cabin = "NA"; // economy
+  // Working Decolar pattern used by scrapers (di + reSearch). Prefer opening Kayak first.
   const decolar = ret
-    ? `https://www.decolar.com/shop/flights/results/roundtrip/${o}/${d}/${input.departDate}/${ret}/${adults}/0/0/NA/NA/${cabin}/NA/NA?from=SB&sort=price_asc`
-    : `https://www.decolar.com/shop/flights/results/oneway/${o}/${d}/${input.departDate}/${adults}/0/0/NA/${cabin}/NA/NA?from=SB&sort=price_asc`;
+    ? `https://www.decolar.com/shop/flights/results/roundtrip/${o}/${d}/${input.departDate}/${ret}/${adults}/0/0/NA/NA/NA/NA/NA?from=SB&di=${adults}-0&reSearch=true`
+    : `https://www.decolar.com/shop/flights/results/oneway/${o}/${d}/${input.departDate}/${adults}/0/0/NA/NA/NA/NA?from=SB&di=${adults}-0&reSearch=true`;
 
   return { googleFlights, kayak, skyscanner, decolar };
 }
 
 export function formatLinksMessage(links: BuyLinks): string {
   return [
-    `Decolar: ${links.decolar}`,
     `Kayak: ${links.kayak}`,
+    `Decolar: ${links.decolar}`,
     `Skyscanner: ${links.skyscanner}`,
     `Google Flights: ${links.googleFlights}`,
   ].join("\n");

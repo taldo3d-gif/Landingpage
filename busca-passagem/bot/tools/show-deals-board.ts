@@ -37,14 +37,14 @@ function formatQuote(q: PriceQuote, i: number, adults: number): string {
       : "";
   return (
     `${i + 1}. ${money(q.pricePerAdult, q.currency)}/pessoa${total}${cia}${stops}${dates}${whenOut}${whenRet}\n` +
-    `   Decolar: ${q.buy.decolar}\n` +
-    `   Kayak: ${q.buy.kayak}`
+    `   Kayak: ${q.buy.kayak}\n` +
+    `   Decolar: ${q.buy.decolar}`
   );
 }
 
 export default defineTool({
   description:
-    "Search real fares. maxPrice PER PERSON (ida+volta). directOnly=true for nonstop only. Shows $/pessoa + couple total + Decolar/Kayak for the quote dates.",
+    "Search real fares. maxPrice PER PERSON (ida+volta). Prefer Kayak links. directOnly or maxLayoverMinutes (default 180).",
   effect: "read",
   inputSchema: z.object({
     origin: z.string().min(3).max(3),
@@ -64,6 +64,13 @@ export default defineTool({
       .boolean()
       .optional()
       .describe("Only nonstop flights (default false)"),
+    maxLayoverMinutes: z
+      .number()
+      .int()
+      .min(0)
+      .max(720)
+      .optional()
+      .describe("Max layover minutes if not directOnly (default 180)"),
   }),
   async execute(input) {
     const adults = input.adults ?? 2;
@@ -71,6 +78,7 @@ export default defineTool({
     const marginPct = input.marginPct ?? 15;
     const flexDays = input.flexDays ?? 0;
     const directOnly = input.directOnly ?? false;
+    const maxLayoverMinutes = input.maxLayoverMinutes ?? 180;
     const result = await searchPrices({
       origin: input.origin,
       destination: input.destination,
@@ -82,6 +90,7 @@ export default defineTool({
       marginPct,
       flexDays,
       directOnly,
+      maxLayoverMinutes,
     });
 
     const primary =
@@ -97,12 +106,12 @@ export default defineTool({
       result.nearby.length > 0;
 
     const headerLabel = usingNearby
-      ? `Sem direto nas datas exatas no cache — combinações próximas (só direto=${directOnly}):`
+      ? `Sem voo nas datas exatas no cache — combinações próximas:`
       : result.underCeiling.length > 0
         ? "Dentro do teto/pessoa (com margem):"
         : result.quotes.length > 0
-          ? "Nada dentro do teto — melhores diretos encontrados:"
-          : `Nenhum voo direto ${input.departDate}` +
+          ? "Nada dentro do teto — melhores encontrados:"
+          : `Nenhum voo ${input.departDate}` +
             (input.returnDate ? ` ↺ ${input.returnDate}` : "") +
             ".";
 
@@ -121,12 +130,14 @@ export default defineTool({
       `${input.origin.toUpperCase()} → ${input.destination.toUpperCase()} · ${input.departDate}` +
         (input.returnDate ? ` ↺ ${input.returnDate}` : "") +
         ` · ${adults} adulto(s)` +
-        (directOnly ? " · SÓ DIRETO" : "") +
+        (directOnly
+          ? " · SÓ DIRETO"
+          : ` · direto ou escala ≤${maxLayoverMinutes}min`) +
         tetoLine,
       "",
       ...priceLines,
       "",
-      "Abra Decolar/Kayak do item — confira o total antes de pagar.",
+      "Abra Kayak primeiro (Decolar às vezes quebra). Confira o total antes de pagar.",
     ].join("\n");
 
     return {
@@ -141,6 +152,7 @@ export default defineTool({
       marginPct,
       flexDays,
       directOnly,
+      maxLayoverMinutes,
       chatMarkdown,
       note: result.note,
     };

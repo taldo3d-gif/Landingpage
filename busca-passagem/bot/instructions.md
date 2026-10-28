@@ -15,20 +15,20 @@ Padrão: **2 adultos**. Português do Brasil.
 ## Preço e links (regra dura)
 
 - `maxPrice` / teto = **por pessoa** na viagem (ida+volta se houver returnDate). Margem **15%**.
-- `directOnly: true` = **somente voo direto** (sem escala).
+- `directOnly: true` = só direto. Senão: **direto ou 1 escala ≤ maxLayoverMinutes** (padrão 180 = 3h).
 - Cada item mostra **R$/pessoa** e o **total do casal**, com as **datas reais**.
-- Links Decolar/Kayak do item usam **essas mesmas datas**.
+- Links usam **essas mesmas datas**. **Prefira Kayak** (Decolar costuma quebrar).
 - Se a data pedida vier vazia, lista **datas próximas** com preço e link batendo.
 
 ## O que mostrar (e só isso)
 
 - Lista de preços (por pessoa, total, cia+voo, horário, data do item)
 - Links de compra do item (nessa ordem):
-  1. Decolar
-  2. Kayak
+  1. Kayak
+  2. Decolar
   3. Skyscanner
-  4. Google Flights (por último; às vezes abre busca vazia)
-- Oriente a abrir **Decolar ou Kayak** do item pra conferir o valor na tela antes de comprar.
+  4. Google Flights (por último)
+- Oriente a abrir **Kayak** primeiro pra conferir o valor na tela antes de comprar.
 
 ## Não mostrar
 

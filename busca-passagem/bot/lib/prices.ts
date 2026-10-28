@@ -51,6 +51,7 @@ function mockQuotes(input: {
       returnDate: input.returnDate ?? null,
       departures: [`${input.departDate}T08:15`],
       transfers: 0,
+      durationMinutes: 170,
       source: "mock",
       buy,
     },
@@ -64,11 +65,44 @@ type RawRow = {
   departure_at?: string;
   return_at?: string;
   transfers?: number;
+  /** Total outbound minutes (flying + layover). */
+  duration_to?: number;
+  duration?: number;
 };
 
-function passesDirect(row: RawRow, directOnly: boolean): boolean {
-  if (!directOnly) return true;
-  return row.transfers === 0;
+/** Min block time guess so we can estimate layover ≈ duration - minBlock. */
+const MIN_BLOCK_MINUTES = 120;
+
+function estimatedLayoverMinutes(row: RawRow): number | null {
+  const transfers = row.transfers ?? 0;
+  if (transfers <= 0) return 0;
+  const dur =
+    typeof row.duration_to === "number"
+      ? row.duration_to
+      : typeof row.duration === "number"
+        ? row.duration
+        : null;
+  if (dur == null) return null;
+  return Math.max(0, dur - MIN_BLOCK_MINUTES);
+}
+
+/**
+ * Accept nonstop, or 1 stop with layover ≤ maxLayoverMinutes.
+ * directOnly=true → nonstop only.
+ */
+function passesStops(
+  row: RawRow,
+  directOnly: boolean,
+  maxLayoverMinutes: number,
+): boolean {
+  const transfers = row.transfers ?? 0;
+  if (directOnly) return transfers === 0;
+  if (transfers === 0) return true;
+  if (transfers > 1) return false;
+  const layover = estimatedLayoverMinutes(row);
+  // If layover unknown, keep 1-stop (Kayak/Decolar still filterable by user).
+  if (layover == null) return true;
+  return layover <= maxLayoverMinutes;
 }
 
 function toQuotes(
@@ -82,6 +116,7 @@ function toQuotes(
     currency: string;
     flexDays: number;
     directOnly: boolean;
+    maxLayoverMinutes: number;
     anyDate?: boolean;
   },
 ): PriceQuote[] {
@@ -89,7 +124,7 @@ function toQuotes(
   const out: PriceQuote[] = [];
   for (const row of rows) {
     if (typeof row.price !== "number" || !row.departure_at) continue;
-    if (!passesDirect(row, input.directOnly)) continue;
+    if (!passesStops(row, input.directOnly, input.maxLayoverMinutes)) continue;
     const flightDate = dayOnly(row.departure_at);
     if (!input.anyDate && !withinFlex(flightDate, input.departDate, input.flexDays)) {
       continue;
@@ -113,6 +148,12 @@ function toQuotes(
       adults,
     });
     const fn = row.flight_number != null ? String(row.flight_number) : null;
+    const durationMinutes =
+      typeof row.duration_to === "number"
+        ? row.duration_to
+        : typeof row.duration === "number"
+          ? row.duration
+          : null;
     out.push({
       price,
       pricePerAdult,
@@ -125,6 +166,7 @@ function toQuotes(
         (v): v is string => typeof v === "string",
       ),
       transfers: typeof row.transfers === "number" ? row.transfers : null,
+      durationMinutes,
       source: "travelpayouts",
       buy,
     });
@@ -178,6 +220,7 @@ async function composeRoundTrip(input: {
   currency: string;
   flexDays: number;
   directOnly: boolean;
+  maxLayoverMinutes: number;
   token: string;
   anyDate: boolean;
 }): Promise<PriceQuote[]> {
@@ -232,6 +275,7 @@ async function composeRoundTrip(input: {
     currency: input.currency,
     flexDays: input.anyDate ? 31 : input.flexDays,
     directOnly: input.directOnly,
+    maxLayoverMinutes: input.maxLayoverMinutes,
     anyDate: input.anyDate,
   });
   const rets = toQuotes(retRows, {
@@ -243,6 +287,7 @@ async function composeRoundTrip(input: {
     currency: input.currency,
     flexDays: input.anyDate ? 31 : input.flexDays,
     directOnly: input.directOnly,
+    maxLayoverMinutes: input.maxLayoverMinutes,
     anyDate: input.anyDate,
   });
 
@@ -267,6 +312,7 @@ async function composeRoundTrip(input: {
             : `${o.airline}+${r.airline}`
           : o.airline ?? r.airline;
       const flightNumber = [o.flightNumber, r.flightNumber].filter(Boolean).join("/");
+      const transfers = Math.max(o.transfers ?? 0, r.transfers ?? 0);
       pairs.push({
         price: Math.round(pricePerAdult * adults),
         pricePerAdult,
@@ -276,7 +322,8 @@ async function composeRoundTrip(input: {
         flightDate: o.flightDate,
         returnDate: r.flightDate,
         departures: [...o.departures, ...r.departures],
-        transfers: 0,
+        transfers,
+        durationMinutes: o.durationMinutes,
         source: "travelpayouts",
         buy,
       });
@@ -312,6 +359,8 @@ export async function searchPrices(input: {
   flexDays?: number;
   /** Only nonstop (transfers === 0). Default false. */
   directOnly?: boolean;
+  /** Max connection wait minutes when not directOnly. Default 180 (3h). */
+  maxLayoverMinutes?: number;
   currency: string;
 }): Promise<{
   quotes: PriceQuote[];
@@ -325,11 +374,13 @@ export async function searchPrices(input: {
   marginPct: number;
   flexDays: number;
   directOnly: boolean;
+  maxLayoverMinutes: number;
 }> {
   const adults = Math.max(1, input.adults);
   const marginPct = input.marginPct ?? 15;
   const flexDays = input.flexDays ?? 0;
   const directOnly = input.directOnly ?? false;
+  const maxLayoverMinutes = input.maxLayoverMinutes ?? 180;
   const ceiling = effectiveCeiling(input.maxPrice, marginPct);
   const ceilingTotal = ceiling == null ? null : ceiling * adults;
   const links = buildBuyLinks({ ...input, adults });
@@ -351,12 +402,13 @@ export async function searchPrices(input: {
       marginPct,
       flexDays,
       directOnly,
+      maxLayoverMinutes,
     };
   }
 
   const token = process.env.TRAVELPAYOUTS_TOKEN!.trim();
   const month = input.departDate.slice(0, 7);
-  const base = { ...input, adults, flexDays, directOnly };
+  const base = { ...input, adults, flexDays, directOnly, maxLayoverMinutes };
 
   let quotes: PriceQuote[] = [];
   let nearby: PriceQuote[] = [];
@@ -386,6 +438,7 @@ export async function searchPrices(input: {
         currency: input.currency,
         flexDays,
         directOnly,
+        maxLayoverMinutes,
         token,
         anyDate: false,
       });
@@ -401,6 +454,7 @@ export async function searchPrices(input: {
         currency: input.currency,
         flexDays,
         directOnly,
+        maxLayoverMinutes,
         token,
         anyDate: true,
       });
@@ -443,12 +497,15 @@ export async function searchPrices(input: {
     links,
     note:
       `Teto = por pessoa ida+volta (margem ${marginPct}% → ${ceiling ?? "—"}/adulto). ` +
-      (directOnly ? "Somente voo DIRETO. " : "") +
-      `Total = × ${adults}. Links na DATA DO ITEM. Confira na Decolar/Kayak.`,
+      (directOnly
+        ? "Somente voo DIRETO. "
+        : `Direto ou 1 escala ≤ ${maxLayoverMinutes} min. `) +
+      `Total = × ${adults}. Prefira Kayak se Decolar falhar.`,
     ceiling,
     ceilingTotal,
     marginPct,
     flexDays,
     directOnly,
+    maxLayoverMinutes,
   };
 }
