@@ -29,7 +29,7 @@ function googleFlightsResultsUrl(input: {
 
 /**
  * Trusted checkout URLs.
- * Prefer Kayak — Decolar often 404s/blocks deep links; use reSearch+di format.
+ * Kayak gets stop + layover filters so 17h connections stay hidden.
  */
 export function buildBuyLinks(input: {
   origin: string;
@@ -37,11 +37,17 @@ export function buildBuyLinks(input: {
   departDate: string;
   returnDate?: string | null;
   adults: number;
+  /** Prefer nonstop only in Kayak. */
+  directOnly?: boolean;
+  /** Max layover minutes for Kayak filter (default 180). */
+  maxLayoverMinutes?: number;
 }): BuyLinks {
   const o = input.origin.toUpperCase();
   const d = input.destination.toUpperCase();
   const adults = Math.max(1, Math.min(9, input.adults));
   const ret = input.returnDate ?? null;
+  const directOnly = input.directOnly ?? false;
+  const maxLayover = Math.max(0, input.maxLayoverMinutes ?? 180);
 
   const googleFlights = googleFlightsResultsUrl({
     origin: o,
@@ -55,15 +61,19 @@ export function buildBuyLinks(input: {
   const kayakPath = ret
     ? `${o}-${d}/${input.departDate}/${ret}${kayakAdults}`
     : `${o}-${d}/${input.departDate}${kayakAdults}`;
-  const kayak = `https://www.kayak.com.br/flights/${kayakPath}?sort=price_a`;
+  // stops=0 nonstop; stops=-2 = nonstop + 1 stop. layoverdur=0,MAX minutes.
+  const kayakFs = directOnly
+    ? "stops=0"
+    : `stops=-2;layoverdur=0,${maxLayover}`;
+  const kayak = `https://www.kayak.com.br/flights/${kayakPath}?sort=price_a&fs=${encodeURIComponent(kayakFs)}`;
 
   const skyOut = yymmdd(input.departDate);
   const skyRet = ret ? yymmdd(ret) : "";
+  const preferDirects = directOnly ? "true" : "false";
   const skyscanner = ret
-    ? `https://www.skyscanner.com.br/transporte/voos/${o.toLowerCase()}/${d.toLowerCase()}/${skyOut}/${skyRet}/?adults=${adults}&adultsv2=${adults}&cabinclass=economy&rtn=1&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false`
-    : `https://www.skyscanner.com.br/transporte/voos/${o.toLowerCase()}/${d.toLowerCase()}/${skyOut}/?adults=${adults}&adultsv2=${adults}&cabinclass=economy&rtn=0&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false`;
+    ? `https://www.skyscanner.com.br/transporte/voos/${o.toLowerCase()}/${d.toLowerCase()}/${skyOut}/${skyRet}/?adults=${adults}&adultsv2=${adults}&cabinclass=economy&rtn=1&preferdirects=${preferDirects}&outboundaltsenabled=false&inboundaltsenabled=false`
+    : `https://www.skyscanner.com.br/transporte/voos/${o.toLowerCase()}/${d.toLowerCase()}/${skyOut}/?adults=${adults}&adultsv2=${adults}&cabinclass=economy&rtn=0&preferdirects=${preferDirects}&outboundaltsenabled=false&inboundaltsenabled=false`;
 
-  // Working Decolar pattern used by scrapers (di + reSearch). Prefer opening Kayak first.
   const decolar = ret
     ? `https://www.decolar.com/shop/flights/results/roundtrip/${o}/${d}/${input.departDate}/${ret}/${adults}/0/0/NA/NA/NA/NA/NA?from=SB&di=${adults}-0&reSearch=true`
     : `https://www.decolar.com/shop/flights/results/oneway/${o}/${d}/${input.departDate}/${adults}/0/0/NA/NA/NA/NA?from=SB&di=${adults}-0&reSearch=true`;
@@ -74,7 +84,6 @@ export function buildBuyLinks(input: {
 export function formatLinksMessage(links: BuyLinks): string {
   return [
     `Kayak: ${links.kayak}`,
-    `Decolar: ${links.decolar}`,
     `Skyscanner: ${links.skyscanner}`,
     `Google Flights: ${links.googleFlights}`,
   ].join("\n");

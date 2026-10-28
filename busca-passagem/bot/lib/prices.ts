@@ -89,6 +89,7 @@ function estimatedLayoverMinutes(row: RawRow): number | null {
 /**
  * Accept nonstop, or 1 stop with layover ≤ maxLayoverMinutes.
  * directOnly=true → nonstop only.
+ * Unknown layover on a connection → reject (avoids 17h surprises).
  */
 function passesStops(
   row: RawRow,
@@ -100,8 +101,7 @@ function passesStops(
   if (transfers === 0) return true;
   if (transfers > 1) return false;
   const layover = estimatedLayoverMinutes(row);
-  // If layover unknown, keep 1-stop (Kayak/Decolar still filterable by user).
-  if (layover == null) return true;
+  if (layover == null) return false;
   return layover <= maxLayoverMinutes;
 }
 
@@ -146,6 +146,8 @@ function toQuotes(
       departDate: flightDate,
       returnDate: ret,
       adults,
+      directOnly: input.directOnly,
+      maxLayoverMinutes: input.maxLayoverMinutes,
     });
     const fn = row.flight_number != null ? String(row.flight_number) : null;
     const durationMinutes =
@@ -304,6 +306,8 @@ async function composeRoundTrip(input: {
         departDate: o.flightDate,
         returnDate: r.flightDate,
         adults,
+        directOnly: input.directOnly,
+        maxLayoverMinutes: input.maxLayoverMinutes,
       });
       const airline =
         o.airline && r.airline
@@ -383,7 +387,12 @@ export async function searchPrices(input: {
   const maxLayoverMinutes = input.maxLayoverMinutes ?? 180;
   const ceiling = effectiveCeiling(input.maxPrice, marginPct);
   const ceilingTotal = ceiling == null ? null : ceiling * adults;
-  const links = buildBuyLinks({ ...input, adults });
+  const links = buildBuyLinks({
+    ...input,
+    adults,
+    directOnly,
+    maxLayoverMinutes,
+  });
 
   const under = (list: PriceQuote[]) =>
     ceiling == null ? list : list.filter((q) => q.pricePerAdult <= ceiling);
