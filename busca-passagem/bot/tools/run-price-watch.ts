@@ -116,6 +116,7 @@ export default defineTool({
         );
       });
       const buy = cheapest?.buy ?? search.links;
+      const exactLinks = search.links;
       const text = [
         underMax ? "Preco abaixo do teto/pessoa (com margem)" : "Atualizacao de preco",
         route,
@@ -123,11 +124,15 @@ export default defineTool({
         priceLine,
         ...topLines,
         "",
-        "Comprar (mesma data do item — prefira Kayak):",
+        "Links da melhor opcao (data do item):",
         `Kayak: ${buy.kayak}`,
-        `Decolar: ${buy.decolar}`,
         `Skyscanner: ${buy.skyscanner}`,
         `Google Flights: ${buy.googleFlights}`,
+        "",
+        `Links das datas pedidas (${watch.departDate}${watch.returnDate ? ` ↺ ${watch.returnDate}` : ""}):`,
+        `Kayak: ${exactLinks.kayak}`,
+        `Skyscanner: ${exactLinks.skyscanner}`,
+        `Google Flights: ${exactLinks.googleFlights}`,
       ]
         .filter(Boolean)
         .join("\n");
