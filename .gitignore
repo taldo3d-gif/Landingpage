@@ -5,4 +5,5 @@
 node_modules/
 .DS_Store
 Thumbs.db
-tools/
+/tools/
+!busca-passagem/bot/tools/
