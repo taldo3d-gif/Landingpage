@@ -54,17 +54,17 @@ export function renderDealsBoardHtml(input: {
           : q.pricePerAdult <= input.maxPrice
             ? '<span class="ok">≤ teto/pessoa</span>'
             : '<span class="no">acima</span>';
-      const buy = q.buy?.decolar ?? input.links.decolar;
-      const kayak = q.buy?.kayak ?? input.links.kayak;
+      const L = q.buy ?? input.links;
       return `<tr>
         <td>${i + 1}</td>
         <td class="price">${esc(money(q.pricePerAdult, q.currency))}/pessoa<br/><small>${esc(money(q.price, q.currency))} total</small>${q.durationMinutes != null ? `<br/><small>${q.durationMinutes} min</small>` : ""}</td>
         <td>${esc(q.airline ?? "—")}${q.flightNumber ? esc(q.flightNumber) : ""}</td>
         <td>${esc(q.flightDate)} · ${esc(q.departures.join(" · ") || "—")}</td>
         <td>${ok}</td>
-        <td>
-          <a href="${esc(buy)}" target="_blank" rel="noopener">Decolar</a>
-          · <a href="${esc(kayak)}" target="_blank" rel="noopener">Kayak</a>
+        <td class="buy">
+          <a href="${esc(L.kayak)}" target="_blank" rel="noopener">Kayak</a>
+          · <a href="${esc(L.viajanet)}" target="_blank" rel="noopener">Viajanet</a>
+          · <a href="${esc(L.latam)}" target="_blank" rel="noopener">LATAM</a>
         </td>
       </tr>`;
     })
@@ -121,11 +121,23 @@ export function renderDealsBoardHtml(input: {
     </tbody>
   </table>
   <div class="links">
-    <strong>Buscar também em:</strong><br/>
-    <a href="${esc(input.links.googleFlights)}" target="_blank" rel="noopener">Google Flights</a>
+    <strong>Comparar (reais):</strong><br/>
     <a href="${esc(input.links.kayak)}" target="_blank" rel="noopener">Kayak</a>
     <a href="${esc(input.links.skyscanner)}" target="_blank" rel="noopener">Skyscanner</a>
+    <a href="${esc(input.links.googleFlights)}" target="_blank" rel="noopener">Google Flights</a>
+    <a href="${esc(input.links.momondo)}" target="_blank" rel="noopener">Momondo</a>
+    <a href="${esc(input.links.expedia)}" target="_blank" rel="noopener">Expedia</a>
+    <a href="${esc(input.links.voopter)}" target="_blank" rel="noopener">Voopter</a>
+    <a href="${esc(input.links.booking)}" target="_blank" rel="noopener">Booking</a>
+    <br/><strong>OTAs Brasil:</strong><br/>
+    <a href="${esc(input.links.viajanet)}" target="_blank" rel="noopener">Viajanet</a>
+    <a href="${esc(input.links.cvc)}" target="_blank" rel="noopener">CVC</a>
+    <a href="${esc(input.links.edestinos)}" target="_blank" rel="noopener">eDestinos</a>
     <a href="${esc(input.links.decolar)}" target="_blank" rel="noopener">Decolar</a>
+    <br/><strong>Cias:</strong><br/>
+    <a href="${esc(input.links.latam)}" target="_blank" rel="noopener">LATAM</a>
+    <a href="${esc(input.links.azul)}" target="_blank" rel="noopener">Azul</a>
+    <a href="${esc(input.links.gol)}" target="_blank" rel="noopener">GOL</a>
   </div>
 </main>
 </body>

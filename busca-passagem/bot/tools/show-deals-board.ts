@@ -1,5 +1,9 @@
 import { defineTool } from "@grok/agent-sdk/tools";
 import * as z from "zod/v4";
+import {
+  formatLinksMessage,
+  formatQuoteLinkLine,
+} from "../lib/buy-links.js";
 import { searchPrices } from "../lib/prices.js";
 import type { PriceQuote } from "../lib/types.js";
 
@@ -37,8 +41,7 @@ function formatQuote(q: PriceQuote, i: number, adults: number): string {
       : "";
   return (
     `${i + 1}. ${money(q.pricePerAdult, q.currency)}/pessoa${total}${cia}${stops}${dates}${whenOut}${whenRet}\n` +
-    `   Kayak: ${q.buy.kayak}\n` +
-    `   Decolar: ${q.buy.decolar}`
+    formatQuoteLinkLine(q.buy)
   );
 }
 
@@ -137,7 +140,12 @@ export default defineTool({
       "",
       ...priceLines,
       "",
-      "Abra Kayak primeiro (Decolar às vezes quebra). Confira o total antes de pagar.",
+      `Todas as opções (datas pedidas ${input.departDate}` +
+        (input.returnDate ? ` ↺ ${input.returnDate}` : "") +
+        "):",
+      formatLinksMessage(result.links),
+      "",
+      "Abra Kayak/cias primeiro. Confira o total antes de pagar. Só reais — sem milhas.",
     ].join("\n");
 
     return {

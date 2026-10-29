@@ -1,5 +1,6 @@
 import { defineTool } from "@grok/agent-sdk/tools";
 import * as z from "zod/v4";
+import { formatLinksMessage } from "../lib/buy-links.js";
 import { alertDedupeKey } from "../lib/kv-keys.js";
 import { defaultWhatsAppTo, sendWhatsAppText } from "../lib/evolution.js";
 import { effectiveCeiling, searchPrices } from "../lib/prices.js";
@@ -125,14 +126,10 @@ export default defineTool({
         ...topLines,
         "",
         "Links da melhor opcao (data do item):",
-        `Kayak: ${buy.kayak}`,
-        `Skyscanner: ${buy.skyscanner}`,
-        `Google Flights: ${buy.googleFlights}`,
+        formatLinksMessage(buy),
         "",
         `Links das datas pedidas (${watch.departDate}${watch.returnDate ? ` ↺ ${watch.returnDate}` : ""}):`,
-        `Kayak: ${exactLinks.kayak}`,
-        `Skyscanner: ${exactLinks.skyscanner}`,
-        `Google Flights: ${exactLinks.googleFlights}`,
+        formatLinksMessage(exactLinks),
       ]
         .filter(Boolean)
         .join("\n");

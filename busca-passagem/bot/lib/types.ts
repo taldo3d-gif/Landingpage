@@ -26,6 +26,28 @@ export type FlightWatch = {
   updatedAt: string;
 };
 
+/**
+ * Cash-only BR comparison / buy deep links for one date set.
+ * Metasearch + OTAs BR + cias. Sem milhas / MaxMilhas / 123milhas.
+ */
+export type BuyLinks = {
+  kayak: string;
+  skyscanner: string;
+  googleFlights: string;
+  momondo: string;
+  expedia: string;
+  voopter: string;
+  viajanet: string;
+  cvc: string;
+  edestinos: string;
+  booking: string;
+  azul: string;
+  latam: string;
+  gol: string;
+  /** Often flaky deep-link; kept last. */
+  decolar: string;
+};
+
 export type PriceQuote = {
   /** Total for all adults (what you pay). */
   price: number;
@@ -43,17 +65,5 @@ export type PriceQuote = {
   durationMinutes: number | null;
   source: "travelpayouts" | "mock";
   /** Trusted buy links for THIS flight date (not a generic search). */
-  buy: {
-    decolar: string;
-    kayak: string;
-    skyscanner: string;
-    googleFlights: string;
-  };
-};
-
-export type BuyLinks = {
-  googleFlights: string;
-  kayak: string;
-  skyscanner: string;
-  decolar: string;
+  buy: BuyLinks;
 };

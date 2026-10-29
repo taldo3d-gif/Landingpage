@@ -1,32 +1,93 @@
 /**
- * Where we send the user to buy. Travelpayouts/Aviasales is used only for
- * price discovery — affiliate deep links often land on unknown OTAs (incl. Kiwi).
+ * Where we send the user to buy (cash / BRL only).
+ * Travelpayouts is price discovery only — never checkout.
+ * Sem milhas / MaxMilhas / 123milhas.
  */
 
 export const TRUSTED_BUY_SITES = [
   {
-    id: "google_flights",
-    name: "Google Flights",
-    trust: "alta",
-    note: "Metabusca do Google; você escolhe a companhia/OTA na hora. Bom pra comparar.",
-  },
-  {
-    id: "decolar",
-    name: "Decolar",
-    trust: "alta",
-    note: "OTA grande no Brasil (Despegar). Reclamações existem como em qualquer OTA; é conhecida e regulada no BR.",
-  },
-  {
     id: "kayak",
     name: "Kayak",
     trust: "alta",
-    note: "Metabusca (Booking Holdings). Redireciona para companhia ou OTA parceira.",
+    note: "Metabusca (Booking Holdings).",
   },
   {
     id: "skyscanner",
     name: "Skyscanner",
     trust: "alta",
-    note: "Metabusca. Prefira finalizar no site da companhia quando o Skyscanner oferecer.",
+    note: "Metabusca. Prefira finalizar na cia.",
+  },
+  {
+    id: "google_flights",
+    name: "Google Flights",
+    trust: "alta",
+    note: "Metabusca Google; você escolhe cia/OTA.",
+  },
+  {
+    id: "momondo",
+    name: "Momondo",
+    trust: "alta",
+    note: "Metabusca (mesmo ecossistema Booking).",
+  },
+  {
+    id: "expedia",
+    name: "Expedia",
+    trust: "alta",
+    note: "OTA grande; confira taxa/bagagem no checkout.",
+  },
+  {
+    id: "voopter",
+    name: "Voopter",
+    trust: "media-alta",
+    note: "Comparador BR; redireciona para cia/OTA.",
+  },
+  {
+    id: "booking",
+    name: "Booking Flights",
+    trust: "alta",
+    note: "Metabusca Booking.com (voos).",
+  },
+  {
+    id: "viajanet",
+    name: "Viajanet",
+    trust: "alta",
+    note: "OTA BR (grupo Despegar).",
+  },
+  {
+    id: "cvc",
+    name: "CVC",
+    trust: "alta",
+    note: "Agência BR grande; parcelamento comum.",
+  },
+  {
+    id: "edestinos",
+    name: "eDestinos",
+    trust: "media-alta",
+    note: "OTA BR; confira taxa no checkout.",
+  },
+  {
+    id: "decolar",
+    name: "Decolar",
+    trust: "alta",
+    note: "OTA BR conhecida; deep link às vezes quebra.",
+  },
+  {
+    id: "latam",
+    name: "LATAM",
+    trust: "alta",
+    note: "Companhia — melhor pra pagar.",
+  },
+  {
+    id: "azul",
+    name: "Azul",
+    trust: "alta",
+    note: "Companhia — melhor pra pagar.",
+  },
+  {
+    id: "gol",
+    name: "GOL",
+    trust: "alta",
+    note: "Companhia — melhor pra pagar.",
   },
 ] as const;
 
@@ -37,8 +98,10 @@ export const BLOCKED_BUY_HOST_FRAGMENTS = [
   "kiwifi",
   "anon.travel",
   "tickets.ua",
-  "aviasales.", // price source only — not checkout
+  "aviasales.",
   "emrldtp.com",
+  "123milhas", // histórico de crise / risco ao consumidor
+  "maxmilhas", // foco milhas — fora do escopo (só reais)
 ] as const;
 
 export function isBlockedBuyUrl(url: string | null | undefined): boolean {
@@ -49,8 +112,9 @@ export function isBlockedBuyUrl(url: string | null | undefined): boolean {
 
 export function trustSummaryPt(): string {
   return [
-    "Links de compra permitidos: Google Flights, Decolar, Kayak, Skyscanner.",
-    "Não use Kiwi/Kiwifi nem checkout de agência desconhecida via Aviasales.",
-    "Preço pode vir do cache Travelpayouts; a compra deve ser só nos sites confiáveis acima.",
+    "Comparar: Kayak, Skyscanner, Google Flights, Momondo, Expedia, Voopter, Booking.",
+    "OTAs BR: Viajanet, CVC, eDestinos, Decolar.",
+    "Pagar de preferência na LATAM, Azul ou GOL.",
+    "Só reais — sem milhas. Evite Kiwi, 123milhas e MaxMilhas.",
   ].join(" ");
 }
