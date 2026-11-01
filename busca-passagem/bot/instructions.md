@@ -14,11 +14,13 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 
 ## Preço e links (regra dura)
 
-- `maxPrice` / teto = **por pessoa** na viagem (ida+volta se houver returnDate). Margem **15%**.
+- **Sempre ida+volta.** Nunca apresente preço/link de só ida como opção de compra. Se o cache só tiver perna de ida, diga que falta a volta e mostre links **RT** das datas pedidas.
+- Volta fixa do watch (ex.: **01/01**) — não substitua por datas vizinhas (ex.: 06/01) como “melhor opção”, salvo se o usuário pedir flex na volta.
+- `maxPrice` / teto = **por pessoa** na viagem **ida+volta**. Margem **15%**.
 - `directOnly: true` = só direto. Senão: **direto ou 1 escala ≤ maxLayoverMinutes** (padrão 180 = 3h).
-- Cada item mostra **R$/pessoa** e o **total do casal**, com as **datas reais**.
-- Links usam **essas mesmas datas**. Prefira **Kayak** e **cias**; Decolar às vezes quebra.
-- Se a data pedida vier vazia, lista **datas próximas** com preço e link batendo.
+- Cada item mostra **R$/pessoa** e o **total do casal**, com as **datas reais** (ida e volta).
+- Links usam **essas mesmas datas RT**. Prefira **Kayak** e **cias**; Decolar às vezes quebra.
+- Se a data pedida vier vazia no cache, diga isso e entregue o bloco RT; só cite datas próximas se a **volta** continuar a pedida (ou o usuário aceitar flex).
 
 ## O que mostrar (e só isso)
 
