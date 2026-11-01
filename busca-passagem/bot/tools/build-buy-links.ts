@@ -12,6 +12,7 @@ export default defineTool({
     departDate: z.string(),
     returnDate: z.string().nullable().optional(),
     adults: z.number().int().min(1).max(9).optional(),
+    returnAfterHour: z.number().int().min(0).max(23).nullable().optional(),
   }),
   async execute(input) {
     const links = buildBuyLinks({
@@ -20,6 +21,8 @@ export default defineTool({
       departDate: input.departDate,
       returnDate: input.returnDate ?? null,
       adults: input.adults ?? 2,
+      returnAfterHour:
+        input.returnAfterHour === undefined ? null : input.returnAfterHour,
     });
     return { links, textBlock: formatLinksMessage(links) };
   },

@@ -16,6 +16,7 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 
 - **Sempre ida+volta.** Nunca apresente preço/link de só ida como opção de compra. Se o cache só tiver perna de ida, diga que falta a volta e mostre links **RT** das datas pedidas.
 - Volta fixa do watch (ex.: **01/01**) — não substitua por datas vizinhas (ex.: 06/01) como “melhor opção”, salvo se o usuário pedir flex na volta.
+- Volta **a partir do meio-dia** (`returnAfterHour: 12`) nos watches atuais — só voos de volta ≥12:00.
 - `maxPrice` / teto = **por pessoa** na viagem **ida+volta**. Margem **15%**.
 - `directOnly: true` = só direto. Senão: **direto ou 1 escala ≤ maxLayoverMinutes** (padrão 180 = 3h).
 - Cada item mostra **R$/pessoa** e o **total do casal**, com as **datas reais** (ida e volta).

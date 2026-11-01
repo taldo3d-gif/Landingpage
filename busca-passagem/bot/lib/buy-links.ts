@@ -44,6 +44,8 @@ export function buildBuyLinks(input: {
   adults: number;
   directOnly?: boolean;
   maxLayoverMinutes?: number;
+  /** Return departure at/after this hour (0–23). Applied on Kayak/Momondo filters. */
+  returnAfterHour?: number | null;
 }): BuyLinks {
   const o = input.origin.toUpperCase();
   const d = input.destination.toUpperCase();
@@ -51,6 +53,10 @@ export function buildBuyLinks(input: {
   const ret = input.returnDate ?? null;
   const directOnly = input.directOnly ?? false;
   const maxLayover = Math.max(0, input.maxLayoverMinutes ?? 180);
+  const returnAfterHour =
+    typeof input.returnAfterHour === "number"
+      ? Math.max(0, Math.min(23, Math.floor(input.returnAfterHour)))
+      : null;
 
   const googleFlights = googleFlightsResultsUrl({
     origin: o,
@@ -64,9 +70,14 @@ export function buildBuyLinks(input: {
   const kayakPath = ret
     ? `${o}-${d}/${input.departDate}/${ret}${kayakAdults}`
     : `${o}-${d}/${input.departDate}${kayakAdults}`;
-  const kayakFs = directOnly
-    ? "stops=0"
-    : `stops=-2;layoverdur=0,${maxLayover}`;
+  // Kayak: retakeoff=HHMM,HHMM filters inbound departure window
+  const retTakeoff =
+    ret && returnAfterHour != null
+      ? `;retakeoff=${String(returnAfterHour).padStart(2, "0")}00,2359`
+      : "";
+  const kayakFs = (
+    directOnly ? `stops=0${retTakeoff}` : `stops=-2;layoverdur=0,${maxLayover}${retTakeoff}`
+  );
   const kayak = `https://www.kayak.com.br/flights/${kayakPath}?sort=price_a&fs=${encodeURIComponent(kayakFs)}`;
 
   const momondoPath = ret

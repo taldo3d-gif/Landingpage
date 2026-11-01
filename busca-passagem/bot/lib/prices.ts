@@ -86,6 +86,26 @@ function estimatedLayoverMinutes(row: RawRow): number | null {
   return Math.max(0, dur - MIN_BLOCK_MINUTES);
 }
 
+/** Local hour 0–23 from ISO datetime, or null if unknown. */
+export function hourFromIso(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  const m = iso.match(/T(\d{2}):/);
+  if (!m?.[1]) return null;
+  const h = Number(m[1]);
+  return Number.isFinite(h) ? h : null;
+}
+
+/** Return departure must be at/after returnAfterHour (inclusive). Unknown time → reject. */
+function passesReturnAfterHour(
+  returnAt: string | null | undefined,
+  returnAfterHour: number | null | undefined,
+): boolean {
+  if (returnAfterHour == null) return true;
+  const h = hourFromIso(returnAt);
+  if (h == null) return false;
+  return h >= returnAfterHour;
+}
+
 /**
  * Accept nonstop, or 1 stop with layover ≤ maxLayoverMinutes.
  * directOnly=true → nonstop only.
@@ -117,6 +137,9 @@ function toQuotes(
     flexDays: number;
     directOnly: boolean;
     maxLayoverMinutes: number;
+    returnAfterHour?: number | null;
+    /** When true, filter this row's own departure_at (used for OW return legs). */
+    filterOwnDepartureHour?: boolean;
     anyDate?: boolean;
   },
 ): PriceQuote[] {
@@ -138,6 +161,12 @@ function toQuotes(
     ) {
       continue;
     }
+    // RT cache rows: filter return_at hour. OW return legs: filter departure_at.
+    if (input.filterOwnDepartureHour) {
+      if (!passesReturnAfterHour(row.departure_at, input.returnAfterHour)) continue;
+    } else if (input.returnDate || row.return_at) {
+      if (!passesReturnAfterHour(row.return_at, input.returnAfterHour)) continue;
+    }
     const pricePerAdult = row.price;
     const price = Math.round(pricePerAdult * adults);
     const buy = buildBuyLinks({
@@ -148,6 +177,7 @@ function toQuotes(
       adults,
       directOnly: input.directOnly,
       maxLayoverMinutes: input.maxLayoverMinutes,
+      returnAfterHour: input.returnAfterHour,
     });
     const fn = row.flight_number != null ? String(row.flight_number) : null;
     const durationMinutes =
@@ -223,6 +253,7 @@ async function composeRoundTrip(input: {
   flexDays: number;
   directOnly: boolean;
   maxLayoverMinutes: number;
+  returnAfterHour?: number | null;
   token: string;
   anyDate: boolean;
 }): Promise<PriceQuote[]> {
@@ -278,6 +309,7 @@ async function composeRoundTrip(input: {
     flexDays: input.anyDate ? 31 : input.flexDays,
     directOnly: input.directOnly,
     maxLayoverMinutes: input.maxLayoverMinutes,
+    returnAfterHour: null, // outbound: no return-hour filter
     anyDate: input.anyDate,
   });
   const rets = toQuotes(retRows, {
@@ -290,6 +322,8 @@ async function composeRoundTrip(input: {
     flexDays: input.anyDate ? 31 : input.flexDays,
     directOnly: input.directOnly,
     maxLayoverMinutes: input.maxLayoverMinutes,
+    returnAfterHour: input.returnAfterHour,
+    filterOwnDepartureHour: true,
     anyDate: input.anyDate,
   });
 
@@ -308,6 +342,7 @@ async function composeRoundTrip(input: {
         adults,
         directOnly: input.directOnly,
         maxLayoverMinutes: input.maxLayoverMinutes,
+        returnAfterHour: input.returnAfterHour,
       });
       const airline =
         o.airline && r.airline
@@ -365,6 +400,8 @@ export async function searchPrices(input: {
   directOnly?: boolean;
   /** Max connection wait minutes when not directOnly. Default 180 (3h). */
   maxLayoverMinutes?: number;
+  /** Return departure at/after this local hour (0–23). Default null. */
+  returnAfterHour?: number | null;
   currency: string;
 }): Promise<{
   quotes: PriceQuote[];
@@ -379,12 +416,17 @@ export async function searchPrices(input: {
   flexDays: number;
   directOnly: boolean;
   maxLayoverMinutes: number;
+  returnAfterHour: number | null;
 }> {
   const adults = Math.max(1, input.adults);
   const marginPct = input.marginPct ?? 15;
   const flexDays = input.flexDays ?? 0;
   const directOnly = input.directOnly ?? false;
   const maxLayoverMinutes = input.maxLayoverMinutes ?? 180;
+  const returnAfterHour =
+    typeof input.returnAfterHour === "number"
+      ? Math.max(0, Math.min(23, Math.floor(input.returnAfterHour)))
+      : null;
   const ceiling = effectiveCeiling(input.maxPrice, marginPct);
   const ceilingTotal = ceiling == null ? null : ceiling * adults;
   const links = buildBuyLinks({
@@ -392,6 +434,7 @@ export async function searchPrices(input: {
     adults,
     directOnly,
     maxLayoverMinutes,
+    returnAfterHour,
   });
 
   const under = (list: PriceQuote[]) =>
@@ -412,12 +455,20 @@ export async function searchPrices(input: {
       flexDays,
       directOnly,
       maxLayoverMinutes,
+      returnAfterHour,
     };
   }
 
   const token = process.env.TRAVELPAYOUTS_TOKEN!.trim();
   const month = input.departDate.slice(0, 7);
-  const base = { ...input, adults, flexDays, directOnly, maxLayoverMinutes };
+  const base = {
+    ...input,
+    adults,
+    flexDays,
+    directOnly,
+    maxLayoverMinutes,
+    returnAfterHour,
+  };
 
   let quotes: PriceQuote[] = [];
   let nearby: PriceQuote[] = [];
@@ -448,6 +499,7 @@ export async function searchPrices(input: {
         flexDays,
         directOnly,
         maxLayoverMinutes,
+        returnAfterHour,
         token,
         anyDate: false,
       });
@@ -464,13 +516,14 @@ export async function searchPrices(input: {
         flexDays,
         directOnly,
         maxLayoverMinutes,
+        returnAfterHour,
         token,
         anyDate: true,
       });
     }
   } else {
     let raw = await fetchPricesForDates({ ...input, token });
-    quotes = toQuotes(raw, { ...base, returnDate: null });
+    quotes = toQuotes(raw, { ...base, returnDate: null, returnAfterHour: null });
 
     let rawMonth: RawRow[] | null = null;
     if (quotes.length === 0) {
@@ -479,7 +532,11 @@ export async function searchPrices(input: {
         departDate: month,
         token,
       });
-      quotes = toQuotes(rawMonth, { ...base, returnDate: null });
+      quotes = toQuotes(rawMonth, {
+        ...base,
+        returnDate: null,
+        returnAfterHour: null,
+      });
     }
 
     if (quotes.length === 0) {
@@ -493,6 +550,7 @@ export async function searchPrices(input: {
       nearby = toQuotes(rawMonth, {
         ...base,
         returnDate: null,
+        returnAfterHour: null,
         anyDate: true,
       }).slice(0, 8);
     }
@@ -509,6 +567,9 @@ export async function searchPrices(input: {
       (directOnly
         ? "Somente voo DIRETO. "
         : `Direto ou 1 escala ≤ ${maxLayoverMinutes} min. `) +
+      (returnAfterHour != null
+        ? `Volta a partir das ${String(returnAfterHour).padStart(2, "0")}:00. `
+        : "") +
       `Total = × ${adults}. Prefira Kayak se Decolar falhar.`,
     ceiling,
     ceilingTotal,
@@ -516,5 +577,6 @@ export async function searchPrices(input: {
     flexDays,
     directOnly,
     maxLayoverMinutes,
+    returnAfterHour,
   };
 }

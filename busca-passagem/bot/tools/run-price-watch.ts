@@ -45,6 +45,7 @@ export default defineTool({
       const flexDays = watch.flexDays ?? 0;
       const directOnly = watch.directOnly ?? false;
       const maxLayoverMinutes = watch.maxLayoverMinutes ?? 180;
+      const returnAfterHour = watch.returnAfterHour ?? null;
       const ceiling = effectiveCeiling(watch.maxPrice, marginPct);
       const search = await searchPrices({
         origin: watch.origin,
@@ -58,6 +59,7 @@ export default defineTool({
         flexDays,
         directOnly,
         maxLayoverMinutes,
+        returnAfterHour,
       });
       const pool =
         search.quotes.length > 0 ? search.quotes : search.nearby;
@@ -98,7 +100,9 @@ export default defineTool({
 
       const route = `${watch.origin}→${watch.destination} pedido ${watch.departDate}${
         watch.returnDate ? ` / ${watch.returnDate}` : ""
-      } (${watch.adults} pax${directOnly ? ", so direto" : `, escala<=${maxLayoverMinutes}min`})`;
+      } (${watch.adults} pax${directOnly ? ", so direto" : `, escala<=${maxLayoverMinutes}min`}${
+        returnAfterHour != null ? `, volta>=${String(returnAfterHour).padStart(2, "0")}:00` : ""
+      })`;
       const priceLine = cheapest
         ? `Menor: ${cheapest.pricePerAdult} ${cheapest.currency}/pessoa` +
           ` (${cheapest.price} o casal)` +

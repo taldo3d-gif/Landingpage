@@ -41,6 +41,8 @@ export async function getWatch(
     directOnly: w.directOnly ?? false,
     maxLayoverMinutes:
       typeof w.maxLayoverMinutes === "number" ? w.maxLayoverMinutes : 180,
+    returnAfterHour:
+      typeof w.returnAfterHour === "number" ? w.returnAfterHour : null,
     currency: w.currency ?? "BRL",
     adults: typeof w.adults === "number" ? w.adults : 2,
     active: w.active ?? true,

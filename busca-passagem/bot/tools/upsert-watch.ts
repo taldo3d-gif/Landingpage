@@ -5,7 +5,7 @@ import type { FlightWatch } from "../lib/types.js";
 
 export default defineTool({
   description:
-    "Create or update a flight price watch. maxPrice PER PERSON (ida+volta). directOnly or maxLayoverMinutes (default 180=3h, 1 stop ok).",
+    "Create or update a flight price watch. maxPrice PER PERSON (ida+volta). directOnly or maxLayoverMinutes (default 180=3h). returnAfterHour filters return departure (e.g. 12 = after noon).",
   effect: "idempotent",
   inputSchema: z.object({
     id: z.string().optional(),
@@ -27,6 +27,14 @@ export default defineTool({
       .max(720)
       .optional()
       .describe("Max layover minutes when not directOnly (default 180)"),
+    returnAfterHour: z
+      .number()
+      .int()
+      .min(0)
+      .max(23)
+      .nullable()
+      .optional()
+      .describe("Return departure at/after this hour (e.g. 12 = meio-dia+). null = no filter"),
     currency: z.string().min(3).max(3).optional(),
     adults: z.number().int().min(1).max(9).optional(),
     active: z.boolean().optional(),
@@ -45,6 +53,8 @@ export default defineTool({
       flexDays: input.flexDays ?? 0,
       directOnly: input.directOnly ?? false,
       maxLayoverMinutes: input.maxLayoverMinutes ?? 180,
+      returnAfterHour:
+        input.returnAfterHour === undefined ? null : input.returnAfterHour,
       currency: (input.currency ?? "BRL").toUpperCase(),
       adults: input.adults ?? 2,
       active: input.active ?? true,
@@ -71,6 +81,10 @@ export default defineTool({
       directOnly: input.directOnly ?? existing?.directOnly ?? false,
       maxLayoverMinutes:
         input.maxLayoverMinutes ?? existing?.maxLayoverMinutes ?? 180,
+      returnAfterHour:
+        input.returnAfterHour === undefined
+          ? (existing?.returnAfterHour ?? null)
+          : input.returnAfterHour,
       currency: (input.currency ?? existing?.currency ?? "BRL").toUpperCase(),
       adults: input.adults ?? existing?.adults ?? 2,
       active: input.active ?? existing?.active ?? true,

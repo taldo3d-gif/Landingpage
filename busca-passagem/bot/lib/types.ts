@@ -19,6 +19,11 @@ export type FlightWatch = {
    * Used when directOnly is false; allows 0–1 stop with short layover.
    */
   maxLayoverMinutes: number;
+  /**
+   * Return-leg departure must be at/after this hour local (0–23).
+   * e.g. 12 = volta só a partir do meio-dia. null = sem filtro.
+   */
+  returnAfterHour: number | null;
   currency: string;
   adults: number;
   active: boolean;

@@ -18,6 +18,7 @@ export default defineTool({
     flexDays: z.number().int().min(0).max(7).optional(),
     directOnly: z.boolean().optional(),
     maxLayoverMinutes: z.number().int().min(0).max(720).optional(),
+    returnAfterHour: z.number().int().min(0).max(23).nullable().optional(),
   }),
   async execute(input) {
     const adults = input.adults ?? 2;
@@ -33,6 +34,8 @@ export default defineTool({
       flexDays: input.flexDays,
       directOnly: input.directOnly,
       maxLayoverMinutes: input.maxLayoverMinutes,
+      returnAfterHour:
+        input.returnAfterHour === undefined ? null : input.returnAfterHour,
     });
     const pool =
       result.quotes.length > 0 ? result.quotes : result.nearby;

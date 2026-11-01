@@ -74,6 +74,14 @@ export default defineTool({
       .max(720)
       .optional()
       .describe("Max layover minutes if not directOnly (default 180)"),
+    returnAfterHour: z
+      .number()
+      .int()
+      .min(0)
+      .max(23)
+      .nullable()
+      .optional()
+      .describe("Return departure at/after hour (e.g. 12). null = no filter"),
   }),
   async execute(input) {
     const adults = input.adults ?? 2;
@@ -82,6 +90,8 @@ export default defineTool({
     const flexDays = input.flexDays ?? 0;
     const directOnly = input.directOnly ?? false;
     const maxLayoverMinutes = input.maxLayoverMinutes ?? 180;
+    const returnAfterHour =
+      input.returnAfterHour === undefined ? null : input.returnAfterHour;
     const result = await searchPrices({
       origin: input.origin,
       destination: input.destination,
@@ -94,6 +104,7 @@ export default defineTool({
       flexDays,
       directOnly,
       maxLayoverMinutes,
+      returnAfterHour,
     });
 
     const primary =
@@ -136,6 +147,9 @@ export default defineTool({
         (directOnly
           ? " · SÓ DIRETO"
           : ` · direto ou escala ≤${maxLayoverMinutes}min`) +
+        (returnAfterHour != null
+          ? ` · volta ≥${String(returnAfterHour).padStart(2, "0")}:00`
+          : "") +
         tetoLine,
       "",
       ...priceLines,
@@ -161,6 +175,7 @@ export default defineTool({
       flexDays,
       directOnly,
       maxLayoverMinutes,
+      returnAfterHour,
       chatMarkdown,
       note: result.note,
     };
