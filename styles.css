@@ -229,23 +229,30 @@ svg {
 .brands-marquee-viewport {
   position: relative;
   overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
 
 .brands-marquee-track {
   display: flex;
   width: max-content;
+  flex-shrink: 0;
   gap: 0;
-  animation: brands-marquee-scroll 32s linear infinite;
+  animation: brands-marquee-scroll 28s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
-.brands-marquee-viewport:hover .brands-marquee-track {
-  animation-play-state: paused;
+@media (hover: hover) and (pointer: fine) {
+  .brands-marquee-viewport:hover .brands-marquee-track {
+    animation-play-state: paused;
+  }
 }
 
 .brands-marquee-list {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 52px;
   margin: 0;
   padding: 6px 26px;
@@ -293,11 +300,11 @@ svg {
 
 @keyframes brands-marquee-scroll {
   from {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 
   to {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
@@ -2341,15 +2348,37 @@ h3 {
   }
 
   .hero {
-    gap: 38px;
+    gap: 28px;
     min-height: auto;
-    padding-top: 45px;
+    padding-top: 36px;
+    padding-bottom: 36px;
   }
 
   .hero-art {
-    max-width: 470px;
+    max-width: min(280px, 68vw);
     width: 100%;
     margin: auto;
+    padding: 8px 8px 18px;
+  }
+
+  .hero-frame {
+    padding: 12px;
+    border-radius: 28px;
+  }
+
+  .hero-slideshow {
+    aspect-ratio: 4 / 5;
+    border-width: 3px;
+    border-radius: 14px;
+  }
+
+  .float {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+
+  .float.bottom {
+    left: 0;
   }
 
   .product-heading {
@@ -2461,15 +2490,58 @@ h3 {
   }
 
   .hero-frame {
-    padding: 16px;
+    padding: 8px;
+    border-radius: 22px;
+    box-shadow: 8px 9px 0 var(--color-dark);
+  }
+
+  .hero-art {
+    max-width: min(210px, 56vw);
+    padding: 4px 4px 14px;
+  }
+
+  .hero-slideshow {
+    aspect-ratio: 4 / 5;
+    border-width: 2px;
+    border-radius: 12px;
+  }
+
+  .spark {
+    display: none;
   }
 
   .float.top {
-    right: 0;
+    right: -2px;
+    padding: 8px 10px;
+    font-size: 10px;
   }
 
   .float.bottom {
-    left: 0;
+    display: none;
+  }
+
+  .brands-marquee {
+    padding: 14px 0 18px;
+  }
+
+  .brands-marquee-track {
+    animation-duration: 18s;
+  }
+
+  .brands-marquee-list {
+    gap: 28px;
+    padding: 4px 16px;
+  }
+
+  .brands-marquee-item {
+    min-height: 44px;
+    padding-right: 28px;
+  }
+
+  .brands-marquee-item img,
+  .brands-marquee-item:nth-child(3n) img {
+    max-width: 110px;
+    max-height: 36px;
   }
 
   .product-shot img {
@@ -2493,7 +2565,8 @@ h3 {
   }
 
   .hero {
-    padding: 44px 0 62px;
+    gap: 18px;
+    padding: 24px 0 28px;
   }
 
   h1 {
