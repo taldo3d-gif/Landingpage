@@ -441,4 +441,112 @@
       }
     });
   }
+
+  const demoDialog = document.getElementById("demo-preview");
+  const demoTitle = document.getElementById("demo-title");
+  const demoCopy = document.getElementById("demo-copy");
+  const demoClose = document.getElementById("demo-close");
+
+  if (demoDialog && demoTitle && demoCopy) {
+    document.querySelectorAll("[data-demo]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const isVideo = button.dataset.demo === "video";
+        demoTitle.textContent = isVideo
+          ? "Aqui entra um vídeo real do produto."
+          : "Aqui entra uma publicação real de cliente.";
+        demoCopy.textContent =
+          "Este espaço está pronto para receber conteúdo real das redes, com autorização e créditos. As imagens de capa são do catálogo atual.";
+        demoDialog.showModal();
+      });
+    });
+
+    if (demoClose) {
+      demoClose.addEventListener("click", () => demoDialog.close());
+    }
+
+    demoDialog.addEventListener("click", (event) => {
+      if (event.target === demoDialog) {
+        demoDialog.close();
+      }
+    });
+  }
+
+  function bindHeroSlideshow(root) {
+    if (!root) {
+      return;
+    }
+
+    const slides = Array.from(root.querySelectorAll("img"));
+    if (slides.length < 2) {
+      return;
+    }
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      return;
+    }
+
+    const intervalMs = 4200;
+    let index = slides.findIndex((slide) => slide.classList.contains("is-active"));
+    if (index < 0) {
+      index = 0;
+      slides[0].classList.add("is-active");
+    }
+
+    let timerId = null;
+
+    function show(nextIndex) {
+      slides[index].classList.remove("is-active");
+      index = nextIndex;
+      slides[index].classList.add("is-active");
+    }
+
+    function stop() {
+      if (timerId !== null) {
+        window.clearInterval(timerId);
+        timerId = null;
+      }
+    }
+
+    function start() {
+      stop();
+      timerId = window.setInterval(() => {
+        show((index + 1) % slides.length);
+      }, intervalMs);
+    }
+
+    root.addEventListener("mouseenter", stop);
+    root.addEventListener("mouseleave", start);
+    root.addEventListener("focusin", stop);
+    root.addEventListener("focusout", start);
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        start();
+      }
+    });
+
+    start();
+  }
+
+  bindHeroSlideshow(document.querySelector("[data-hero-slideshow]"));
+
+  const filterButtons = document.querySelectorAll("[data-filter]");
+  const productShots = document.querySelectorAll("[data-category]");
+
+  filterButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const filter = button.dataset.filter;
+
+      filterButtons.forEach((item) => {
+        item.setAttribute("aria-pressed", String(item === button));
+      });
+
+      productShots.forEach((card) => {
+        card.hidden = filter !== "todos" && card.dataset.category !== filter;
+      });
+    });
+  });
 })();

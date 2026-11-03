@@ -1,0 +1,7 @@
+{
+  "plugins": {
+    "adspirer": {
+      "enabled": true
+    }
+  }
+}
