@@ -64,8 +64,14 @@
     <link
       rel="preload"
       as="image"
-      href="assets/products/nome-personalizado-joana.webp"
+      href="assets/hero/halls-01.jpg"
       fetchpriority="high"
+    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
     >
     <link rel="stylesheet" href="styles.css">
     <script type="application/ld+json">
@@ -118,33 +124,42 @@
 
       <nav class="nav-links" aria-label="Navegação principal">
         <a href="#produtos">Produtos</a>
-        <a href="#empresas">Empresas</a>
-        <a href="#portfolio">Portfólio</a>
-        <a href="#relogios">Relógios</a>
+        <a href="#vida-real">Na vida real</a>
+        <a href="#como-funciona">Como funciona</a>
         <a href="#contato">Contato</a>
       </nav>
 
-      <a
-        class="header-cta"
-        href="https://wa.me/5511910634551?text=Ol%C3%A1,%20vim%20pelo%20Google%20e%20quero%20um%20or%C3%A7amento%20de%20impress%C3%A3o%203D."
-        target="_blank"
-        rel="noopener noreferrer"
-        data-whatsapp-cta
-        data-cta-label="cabecalho"
-      >
-        WhatsApp
-      </a>
+      <div class="header-social">
+        <a
+          class="header-cta"
+          href="https://wa.me/5511910634551?text=Ol%C3%A1,%20vim%20pelo%20Google%20e%20quero%20um%20or%C3%A7amento%20de%20impress%C3%A3o%203D."
+          target="_blank"
+          rel="noopener noreferrer"
+          data-whatsapp-cta
+          data-cta-label="cabecalho"
+        >
+          WhatsApp <span class="arrow" aria-hidden="true">↗</span>
+        </a>
+        <a
+          class="header-cta header-cta-instagram"
+          href="https://www.instagram.com/taldostudio3d/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Instagram <span class="arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
     </header>
 
     <main id="top">
       <section class="hero section-shell">
         <div class="hero-content">
-          <span class="eyebrow">Taldo Studio 3D em São Paulo</span>
-          <h1>Impressão 3D Personalizada em São Paulo</h1>
+          <span class="eyebrow">Feito por nós. Do seu jeito.</span>
+          <h1>Sua ideia ganha<br>forma. E <em>vida.</em></h1>
           <p class="hero-copy">
-            Criamos brindes, chaveiros, lembrancinhas, caixinhas, suportes e peças sob encomenda
-            com produção própria, acabamento cuidadoso e atendimento para São Paulo e todo o Brasil.
+            Peças personalizadas em impressão 3D para presentear, destacar sua marca e transformar espaços.
           </p>
+          <p class="creation-invite">Vamos criar sua peça?</p>
           <div class="hero-actions">
             <a
               class="button button-primary"
@@ -154,57 +169,91 @@
               data-whatsapp-cta
               data-cta-label="hero-principal"
             >
-              Pedir Orçamento no WhatsApp
+              Pedir orçamento no WhatsApp <span class="arrow" aria-hidden="true">↗</span>
             </a>
-            <a class="button button-secondary" href="#portfolio">Ver exemplos de produtos</a>
+            <a class="textlink" href="#produtos">Explore os produtos <span class="arrow" aria-hidden="true">↓</span></a>
           </div>
           <ul class="trust-list" aria-label="Diferenciais rápidos">
-            <li>Produção própria</li>
-            <li>Pequenas e médias quantidades</li>
-            <li>Atendimento direto</li>
+            <li>Produção própria em São Paulo</li>
+            <li>Envio para todo o Brasil</li>
           </ul>
         </div>
 
-        <div class="hero-visual" aria-label="Produtos reais da Taldo Studio 3D">
-          <div class="photo-collage">
-            <figure class="hero-photo hero-photo-main">
+        <div class="hero-art" aria-label="Peças da Taldo Studio 3D em uso real">
+          <span class="spark" aria-hidden="true">✳</span>
+          <div class="float top">Ideias únicas, peças também ✨</div>
+          <div class="hero-frame">
+            <div class="hero-slideshow" data-hero-slideshow>
               <img
-                src="assets/products/nome-personalizado-joana.webp"
-                alt="Nome personalizado Joana produzido em impressão 3D"
-                width="920"
-                height="720"
+                class="is-active"
+                src="assets/hero/halls-01.jpg"
+                alt="Chaveiro personalizado Halls preso no look de palco"
+                width="576"
+                height="1024"
                 fetchpriority="high"
                 decoding="async"
               >
-            </figure>
-            <figure class="hero-photo hero-photo-small top">
               <img
-                src="assets/products/chaveiros-coloridos-lote.webp"
-                alt="Chaveiros coloridos personalizados em formato de copos"
-                width="720"
-                height="720"
+                src="assets/hero/halls-02.jpg"
+                alt="Convidada em evento segurando chaveiro personalizado Halls"
+                width="576"
+                height="1024"
                 loading="lazy"
                 decoding="async"
               >
-            </figure>
-            <figure class="hero-photo hero-photo-small bottom">
               <img
-                src="assets/products/suporte-organizador-verde.webp"
-                alt="Suporte organizador verde produzido sob encomenda"
-                width="720"
-                height="720"
+                src="assets/hero/halls-03.jpg"
+                alt="Chaveiro Halls aberto, com o detalhe da peça na mão"
+                width="576"
+                height="1024"
                 loading="lazy"
                 decoding="async"
               >
-            </figure>
+              <img
+                src="assets/hero/halls-04.jpg"
+                alt="Pessoa em evento segurando chaveiro personalizado Halls"
+                width="576"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              >
+              <img
+                src="assets/hero/halls-05.jpg"
+                alt="Chaveiro Halls em uso durante o evento"
+                width="576"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              >
+              <img
+                src="assets/hero/halls-06.jpg"
+                alt="Detalhe do chaveiro Halls em retrato do evento"
+                width="576"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              >
+              <img
+                src="assets/hero/halls-07.jpg"
+                alt="Chaveiro Halls em uso à noite"
+                width="576"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              >
+              <img
+                src="assets/hero/halls-08.jpg"
+                alt="Chaveiro Halls preto com corrente dourada e pingente H"
+                width="768"
+                height="1024"
+                loading="lazy"
+                decoding="async"
+              >
+            </div>
           </div>
-          <div class="floating-card card-one">
-            <strong>Chaveiros</strong>
-            <span>com marca, nome ou tema</span>
-          </div>
-          <div class="floating-card card-two">
-            <strong>Brindes</strong>
-            <span>para eventos e empresas</span>
+          <div class="float bottom">
+            <strong>Da festa para a mão.</strong>
+            <small>Brindes e chaveiros que sua marca usa de verdade.</small>
           </div>
         </div>
       </section>
@@ -224,6 +273,9 @@
                 <li class="brands-marquee-item">
                   <img src="assets/brands/otom.webp" alt="Otom" class="is-on-black" width="120" height="120" loading="lazy">
                 </li>
+                <li class="brands-marquee-item">
+                  <img src="assets/brands/halls.png" alt="Halls" width="180" height="56" loading="lazy">
+                </li>
                 <li class="brands-marquee-item" aria-hidden="true">
                   <img src="assets/brands/edame.webp" alt="" width="140" height="40" loading="lazy">
                 </li>
@@ -232,6 +284,9 @@
                 </li>
                 <li class="brands-marquee-item" aria-hidden="true">
                   <img src="assets/brands/otom.webp" alt="" class="is-on-black" width="120" height="120" loading="lazy">
+                </li>
+                <li class="brands-marquee-item" aria-hidden="true">
+                  <img src="assets/brands/halls.png" alt="" width="180" height="56" loading="lazy">
                 </li>
               </ul>
               <ul class="brands-marquee-list" aria-hidden="true">
@@ -245,6 +300,9 @@
                   <img src="assets/brands/otom.webp" alt="" class="is-on-black" width="120" height="120" loading="lazy">
                 </li>
                 <li class="brands-marquee-item">
+                  <img src="assets/brands/halls.png" alt="" width="180" height="56" loading="lazy">
+                </li>
+                <li class="brands-marquee-item">
                   <img src="assets/brands/edame.webp" alt="" width="140" height="40" loading="lazy">
                 </li>
                 <li class="brands-marquee-item">
@@ -253,6 +311,9 @@
                 <li class="brands-marquee-item">
                   <img src="assets/brands/otom.webp" alt="" class="is-on-black" width="120" height="120" loading="lazy">
                 </li>
+                <li class="brands-marquee-item">
+                  <img src="assets/brands/halls.png" alt="" width="180" height="56" loading="lazy">
+                </li>
               </ul>
             </div>
           </div>
@@ -260,1077 +321,157 @@
       </section>
 
       <section class="section-shell product-section" id="produtos">
-        <div class="section-heading">
-          <span class="eyebrow">Produtos e soluções</span>
-          <h2>Peças personalizadas para marcas, eventos e ideias criativas</h2>
-          <p>
-            Produzimos peças personalizadas para festas, empresas, eventos, condomínios,
-            datas comemorativas e projetos exclusivos.
-          </p>
-        </div>
-
-        <div class="product-grid">
-          <article class="product-card">
-            <span class="card-icon">01</span>
-            <h3>Chaveiros personalizados</h3>
-            <p>Modelos com nomes, logotipos, temas de festa ou personagens.</p>
-          </article>
-          <article class="product-card">
-            <span class="card-icon">02</span>
-            <h3>Brindes corporativos</h3>
-            <p>Peças promocionais para marcas, ações comerciais e eventos.</p>
-          </article>
-          <article class="product-card">
-            <span class="card-icon">03</span>
-            <h3>Lembrancinhas para festas</h3>
-            <p>Itens criativos para aniversários, datas especiais e celebrações.</p>
-          </article>
-          <article class="product-card">
-            <span class="card-icon">04</span>
-            <h3>Caixinhas temáticas</h3>
-            <p>Caixas e embalagens personalizadas para presentes e lembranças.</p>
-          </article>
-          <article class="product-card">
-            <span class="card-icon">05</span>
-            <h3>Mini craques personalizados</h3>
-            <p>Miniaturas e peças decorativas sob medida para presentes.</p>
-          </article>
-          <article class="product-card">
-            <span class="card-icon">06</span>
-            <h3>Peças sob encomenda</h3>
-            <p>Projetos especiais desenvolvidos a partir da sua necessidade.</p>
-          </article>
-          <article class="product-card">
-            <span class="card-icon">07</span>
-            <h3>Suportes e acessórios</h3>
-            <p>Organizadores, displays e itens funcionais para o dia a dia.</p>
-          </article>
-          <article class="product-card">
-            <span class="card-icon">08</span>
-            <h3>Decoração e organizadores</h3>
-            <p>Peças práticas e decorativas para casa, escritório ou loja.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="highlight-band">
-        <div class="section-shell highlight-content">
+        <div class="section-heading product-heading">
           <div>
-            <span class="eyebrow">Diferenciais da Taldo Studio 3D</span>
-            <h2>Estrutura maker com olhar comercial</h2>
+            <span class="eyebrow">Explore as possibilidades</span>
+            <h2>Pequenos detalhes.<br>Grandes ideias.</h2>
           </div>
           <p>
-            Unimos criatividade, técnica e visão de produto para transformar ideias em peças
-            personalizadas, funcionais e prontas para uso.
+            Uma seleção de peças que já saíram da nossa bancada. Qual combina com sua ideia?
           </p>
-          <a
-            class="button button-dark"
-            href="https://wa.me/5511910634551?text=Ol%C3%A1,%20vim%20pelo%20Google%20e%20quero%20um%20or%C3%A7amento%20de%20impress%C3%A3o%203D."
-            target="_blank"
-            rel="noopener noreferrer"
-            data-whatsapp-cta
-            data-cta-label="diferenciais"
-          >
-            Solicitar Orçamento
-          </a>
+        </div>
+
+        <div class="filters" aria-label="Filtrar produtos">
+          <button class="filter" type="button" data-filter="todos" aria-pressed="true">Todos</button>
+          <button class="filter" type="button" data-filter="chaveiros" aria-pressed="false">Chaveiros</button>
+          <button class="filter" type="button" data-filter="decoracao" aria-pressed="false">Decoração</button>
+          <button class="filter" type="button" data-filter="personagens" aria-pressed="false">Personagens</button>
+          <button class="filter" type="button" data-filter="relogios" aria-pressed="false">Relógios</button>
+        </div>
+
+        <div class="product-photo-grid">
+          <article class="product-shot" data-category="chaveiros">
+            <img src="assets/products/chaveiros-coloridos-lote.webp" alt="Chaveiros em formato de copos coloridos" width="720" height="720" loading="lazy">
+            <div class="info">
+              <span class="tag">Chaveiros</span>
+              <h3>Cor em cada detalhe</h3>
+              <a
+                href="https://wa.me/5511910634551?text=Quero%20saber%20sobre%20chaveiros%20personalizados"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-whatsapp-cta
+                data-cta-label="produto-chaveiros"
+              >Quero personalizar <span class="arrow" aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+          <article class="product-shot" data-category="decoracao">
+            <img src="assets/products/nome-personalizado-joana.webp" alt="Nome Joana personalizado" width="920" height="720" loading="lazy">
+            <div class="info">
+              <span class="tag">Decoração</span>
+              <h3>Um presente com nome</h3>
+              <a
+                href="https://wa.me/5511910634551?text=Quero%20um%20nome%20personalizado"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-whatsapp-cta
+                data-cta-label="produto-nome"
+              >Quero personalizar <span class="arrow" aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+          <article class="product-shot" data-category="personagens">
+            <img src="assets/products/mario-pose-iconica.webp" alt="Personagem Mario produzido em impressão 3D" width="720" height="720" loading="lazy">
+            <div class="info">
+              <span class="tag">Personagens</span>
+              <h3>Seu universo em 3D</h3>
+              <a
+                href="https://wa.me/5511910634551?text=Quero%20um%20personagem%20em%203D"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-whatsapp-cta
+                data-cta-label="produto-personagens"
+              >Quero personalizar <span class="arrow" aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+          <article class="product-shot" data-category="relogios">
+            <img src="assets/products/relogio-ferrari.webp" alt="Relógio de parede temático Ferrari" width="720" height="720" loading="lazy">
+            <div class="info">
+              <span class="tag">Relógios</span>
+              <h3>Hora de ter seu estilo</h3>
+              <a
+                href="https://wa.me/5511910634551?text=Quero%20um%20relogio%20personalizado"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-whatsapp-cta
+                data-cta-label="produto-relogios"
+              >Quero personalizar <span class="arrow" aria-hidden="true">↗</span></a>
+            </div>
+          </article>
         </div>
       </section>
 
-      <section class="section-shell benefits-section" id="diferenciais">
-        <div class="section-heading compact">
-          <span class="eyebrow">Diferenciais</span>
-          <h2>O que faz diferença no seu projeto</h2>
-        </div>
-
-        <div class="benefits-grid">
-          <div class="benefit-item">
-            <strong>Produção própria</strong>
-            <span>
-              Controle de prazo, acabamento e personalização do início ao fim, com atenção aos
-              detalhes de cada pedido.
-            </span>
+      <section class="social" id="vida-real">
+        <div class="section-shell">
+          <div class="section-heading product-heading">
+            <div>
+              <span class="eyebrow">Além da foto de produto</span>
+              <h2>Feito aqui.<br>Vivido por aí.</h2>
+            </div>
+            <a class="textlink" href="https://www.instagram.com/taldostudio3d/" target="_blank" rel="noopener noreferrer">
+              Acompanhe @taldostudio3d <span class="arrow" aria-hidden="true">↗</span>
+            </a>
           </div>
-          <div class="benefit-item">
-            <strong>Personalização real</strong>
-            <span>
-              Criamos peças por tema, marca, nome, cor, referência ou ideia, sempre de acordo com a
-              necessidade do cliente.
-            </span>
-          </div>
-          <div class="benefit-item">
-            <strong>Produção em São Paulo, atendimento para todo o Brasil</strong>
-            <span>
-              Atendimento simples pelo WhatsApp para alinhar detalhes, referências, quantidades e
-              orçamento.
-            </span>
-          </div>
-          <div class="benefit-item">
-            <strong>Peças sob encomenda</strong>
-            <span>
-              Brindes, lembrancinhas, chaveiros, caixinhas, suportes, organizadores e produtos
-              exclusivos feitos conforme cada projeto.
-            </span>
+          <div class="social-grid">
+            <button class="reel" type="button" data-demo="video">
+              <span class="demo">PRÉVIA · ESPAÇO PARA VÍDEO</span>
+              <img src="assets/products/mario-pose-iconica.webp" alt="Capa ilustrativa para vídeo de detalhes de personagem" loading="lazy">
+              <span class="play" aria-hidden="true">▶</span>
+              <span class="reel-label">
+                <small>De pertinho</small>
+                <strong>Detalhes que ganham vida</strong>
+              </span>
+            </button>
+            <button class="reel" type="button" data-demo="cliente">
+              <span class="demo">PRÉVIA · ESPAÇO PARA POST</span>
+              <img src="assets/products/chaveiros-coloridos-lote.webp" alt="Capa ilustrativa para publicação de cliente" loading="lazy">
+              <span class="play" aria-hidden="true"><span class="arrow" aria-hidden="true">↗</span></span>
+              <span class="reel-label">
+                <small>Do nosso ateliê para você</small>
+                <strong>Uma peça, muitas histórias</strong>
+              </span>
+            </button>
+            <article class="client">
+              <div>
+                <div class="quote-symbol" aria-hidden="true">“</div>
+                <span class="tag">Voz de quem recebeu</span>
+                <h3>Seu próximo projeto começa com uma boa história.</h3>
+                <p>Este espaço receberá um relato real de cliente, acompanhado do produto e da publicação original.</p>
+              </div>
+              <small>Prévia de composição.<br>Nenhum depoimento foi inventado.</small>
+            </article>
           </div>
         </div>
       </section>
 
       <section class="section-shell process-section" id="como-funciona">
         <div class="section-heading">
-          <span class="eyebrow">Como funciona</span>
-          <h2>Da sua ideia ao produto pronto</h2>
-          <p>Um processo direto para facilitar pedidos individuais, eventos e produções em lote.</p>
+          <span class="eyebrow">Simples, do começo ao fim</span>
+          <h2>Da sua referência à sua peça.</h2>
         </div>
 
-        <ol class="process-list">
-          <li>
-            <span>1</span>
-            <h3>Envie sua ideia</h3>
-            <p>Mande uma referência, desenho, foto, tema ou necessidade pelo WhatsApp.</p>
-          </li>
-          <li>
-            <span>2</span>
-            <h3>Receba orientacao</h3>
-            <p>Indicamos possibilidades, materiais, prazo e valores para produzir.</p>
-          </li>
-          <li>
-            <span>3</span>
-            <h3>Produzimos em 3D</h3>
-            <p>A peça é preparada e impressa com cuidado na nossa estrutura própria.</p>
-          </li>
-          <li>
-            <span>4</span>
-            <h3>Produto pronto</h3>
-            <p>Você recebe um item personalizado, funcional e pronto para usar ou presentear.</p>
-          </li>
-        </ol>
-      </section>
-
-      <section class="section-shell characters-section" id="personagens">
-        <div class="section-heading">
-          <span class="eyebrow">Projetos especiais</span>
-          <h2>Personagens e Mascotes 3D</h2>
-          <p class="characters-lead">
-            Produzimos personagens, mascotes e esculturas personalizadas em impressão 3D para
-            decoração, colecionadores, empresas e projetos especiais.
-          </p>
-        </div>
-
-        <div class="characters-copy">
-          <p>
-            Transformamos ideias, referências e personagens em peças exclusivas produzidas em
-            impressão 3D personalizada. Desenvolvemos bonecos personalizados inspirados em games,
-            filmes, esportes e cultura pop, além de mascotes corporativos e projetos personalizados
-            para empresas, eventos e colecionadores.
-          </p>
-          <p>
-            Cada peça é produzida sob encomenda, com produção própria, atenção aos detalhes,
-            acabamento de qualidade e possibilidade de personalização em tamanho, cores e estilo —
-            desde miniaturas personalizadas até esculturas em impressão 3D de grande porte, tornando
-            cada projeto único.
-          </p>
-        </div>
-
-        <aside class="characters-badge" aria-label="Projetos especiais">
-          <strong>Projetos Especiais</strong>
-          <p>
-            Peças de grande porte produzidas em impressão 3D para decoração, empresas, eventos e
-            colecionadores.
-          </p>
-        </aside>
-
-        <div class="characters-highlights" aria-label="Tipos de personagens e mascotes">
-          <span>🎮 Personagens de Games</span>
-          <span>⚽ Mascotes Esportivos</span>
-          <span>🏢 Mascotes Corporativos</span>
-          <span>🎬 Cultura Pop</span>
-          <span>🎁 Presentes Exclusivos</span>
-          <span>🖼️ Peças Decorativas</span>
-          <span>🛠️ Produção Sob Encomenda</span>
-          <span>✨ Projetos Personalizados</span>
-        </div>
-
-        <p class="characters-gallery-intro">
-          Confira alguns dos projetos desenvolvidos pela Taldo Studio 3D. Cada peça é personalizada
-          conforme a necessidade do cliente, podendo variar em tamanho, acabamento e nível de
-          detalhamento.
-        </p>
-
-        <h3 class="characters-gallery-group">Personagens de games</h3>
-        <div class="gallery-grid gallery-grid-characters">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/mario-pose-iconica.webp"
-              alt="Mario Bros produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-              decoding="async"
-            >
-            <figcaption>Mario Bros</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/mario-peaky-blinders-completo.webp"
-              alt="Mario Peaky Blinders produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Mario Peaky Blinders</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/luigi-pose-classica.webp"
-              alt="Luigi Bros produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Luigi Bros</figcaption>
-          </figure>
-        </div>
-
-        <h3 class="characters-gallery-group">Mascotes de futebol</h3>
-        <div class="gallery-grid gallery-grid-characters">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/canarinho-pistola-flexao.webp"
-              alt="Canarinho Pistola produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Canarinho Pistola</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/santo-paulo-spfc-em-pe.webp"
-              alt="Santo Paulo SPFC produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Santo Paulo SPFC</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/aguia-corinthians-musculoso.webp"
-              alt="Águia Corinthians produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Águia Corinthians</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/urubu-flamengo-musculoso.webp"
-              alt="Urubu Flamengo produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Urubu Flamengo</figcaption>
-          </figure>
-        </div>
-
-        <h3 class="characters-gallery-group">Super-heróis</h3>
-        <div class="gallery-grid gallery-grid-characters">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/pantera-negra-ataque.webp"
-              alt="Pantera Negra produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Pantera Negra</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/batman-traje-classico.webp"
-              alt="Batman produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Batman</figcaption>
-          </figure>
-        </div>
-
-        <h3 class="characters-gallery-group">Anime e cultura pop</h3>
-        <div class="gallery-grid gallery-grid-characters">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/gojo-satoru-voronoi.webp"
-              alt="Satoru Gojo produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Satoru Gojo</figcaption>
-          </figure>
-        </div>
-
-        <h3 class="characters-gallery-group">Personagens especiais</h3>
-        <div class="gallery-grid gallery-grid-characters">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/harry-potter-varinha.webp"
-              alt="Harry Potter produzido em impressão 3D personalizada"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Harry Potter</figcaption>
-          </figure>
-        </div>
-
-        <div class="gallery-cta characters-cta">
-          <a
-            class="button button-primary"
-            href="https://wa.me/5511910634551?text=Ol%C3%A1,%20vim%20pelo%20site%20e%20quero%20um%20personagem%20personalizado%20em%20impress%C3%A3o%203D."
-            target="_blank"
-            rel="noopener noreferrer"
-            data-whatsapp-cta
-            data-cta-label="personagens-mascotes"
-          >
-            Quero um Personagem Personalizado
-          </a>
-          <p class="characters-cta-note">
-            Tem uma ideia diferente? Entre em contato e desenvolvemos um projeto exclusivo para você.
-          </p>
-        </div>
-      </section>
-
-      <section class="audience-section" id="empresas">
-        <div class="section-shell audience-content">
-          <div class="section-heading compact">
-            <span class="eyebrow">Para quem é</span>
-            <h2>Atendemos pessoas, empresas e eventos</h2>
-            <p>
-              Desde pedidos individuais até produções em pequena e média escala para empresas,
-              eventos e ações promocionais.
-            </p>
-          </div>
-          <div class="audience-tags" aria-label="Públicos atendidos">
-            <span>Festas infantis</span>
-            <span>Empresas</span>
-            <span>Lojas</span>
-            <span>Profissionais autônomos</span>
-            <span>Eventos</span>
-            <span>Condomínios</span>
-            <span>Datas comemorativas</span>
-            <span>Presentes personalizados</span>
-            <span>Ações promocionais</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="section-shell gallery-section" id="portfolio">
-        <div class="section-heading">
-          <span class="eyebrow">Galeria de produtos</span>
-          <h2>Variedade para inspirar seu pedido</h2>
-          <p>
-            Uma seleção de produtos reais para mostrar possibilidades de personalização, acabamento,
-            cores e aplicações. Clique em uma foto para ampliar.
-          </p>
-        </div>
-
-        <div class="gallery-grid gallery-grid-keychains">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-personalizado-azul.webp"
-              alt="Chaveiro azul personalizado produzido em impressão 3D"
-              width="720"
-              height="720"
-              loading="lazy"
-              decoding="async"
-            >
-            <figcaption>Chaveiro personalizado azul</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiros-coloridos-lote.webp"
-              alt="Lote de chaveiros coloridos em impressão 3D"
-              width="720"
-              height="720"
-              loading="lazy"
-            >
-            <figcaption>Chaveiros coloridos em lote</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/nome-personalizado-joana.webp"
-              alt="Nome Joana personalizado em impressão 3D"
-              width="920"
-              height="720"
-              loading="lazy"
-            >
-            <figcaption>Nome personalizado</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/acessorios-personalizados.webp"
-              alt="Acessórios personalizados em cores pastel"
-              width="720"
-              height="720"
-              loading="lazy"
-            >
-            <figcaption>Acessórios em cores variadas</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/peca-funcional-azul.webp"
-              alt="Peça temática azul produzida sob encomenda em impressão 3D"
-              width="720"
-              height="720"
-              loading="lazy"
-            >
-            <figcaption>Peça temática personalizada</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/miniatura-decorativa.webp"
-              alt="Miniatura decorativa personalizada impressa em 3D"
-              width="720"
-              height="720"
-              loading="lazy"
-            >
-            <figcaption>Lembrancinha personalizada</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/decoracao-dragao.webp"
-              alt="Dragões decorativos articulados em impressão 3D"
-              width="720"
-              height="720"
-              loading="lazy"
-            >
-            <figcaption>Miniatura temática</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/suporte-organizador-verde.webp"
-              alt="Suporte organizador verde personalizado"
-              width="720"
-              height="720"
-              loading="lazy"
-            >
-            <figcaption>Peça funcional personalizada</figcaption>
-          </figure>
-        </div>
-
-        <div class="gallery-cta">
-          <p>Quer um produto com seu nome, logo ou tema?</p>
-          <a
-            class="button button-primary"
-            href="https://wa.me/5511910634551?text=Ol%C3%A1,%20vim%20pelo%20site%20e%20quero%20um%20or%C3%A7amento%20de%20impress%C3%A3o%203D."
-            target="_blank"
-            rel="noopener noreferrer"
-            data-whatsapp-cta
-            data-cta-label="galeria-produtos"
-          >
-            Pedir orçamento no WhatsApp
-          </a>
-        </div>
-      </section>
-
-      <section class="section-shell gallery-section" id="chaveiros">
-        <div class="section-heading">
-          <span class="eyebrow">Galeria de chaveiros</span>
-          <h2>Opções personalizadas para inspirar seu pedido</h2>
-          <p>
-            Exemplos reais de chaveiros personalizados produzidos na Taldo Studio 3D. Clique em
-            uma foto para ampliar.
-          </p>
-        </div>
-
-        <div class="gallery-grid gallery-grid-keychains gallery-grid-keychains-only">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-flamengo-escudo.webp"
-              alt="Chaveiro escudo do Flamengo produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-              decoding="async"
-            >
-            <figcaption>Chaveiro escudo do Flamengo</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-alien-verde.webp"
-              alt="Chaveiro alienígena verde produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro alienígena verde</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-mario-interrogacao.webp"
-              alt="Chaveiro bloco de interrogação Mario produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro bloco de interrogação Mario</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-estadio-flamengo.webp"
-              alt="Chaveiros estádio e escudo Flamengo produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiros estádio e escudo Flamengo</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-estadio-spfc.webp"
-              alt="Chaveiros estádio e escudo SPFC produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiros estádio e escudo SPFC</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-estadio-corinthians.webp"
-              alt="Chaveiros estádio e escudo Corinthians produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiros estádio e escudo Corinthians</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-estrela-fidget.webp"
-              alt="Chaveiro estrela fidget produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro estrela fidget</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-casa-de-papel.webp"
-              alt="Chaveiros La Casa de Papel produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiros La Casa de Papel</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-polvos-coloridos.webp"
-              alt="Chaveiros polvos coloridos produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiros polvos coloridos</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-gato-preto.webp"
-              alt="Chaveiro gato preto produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro gato preto</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-homem-aranha.webp"
-              alt="Chaveiro Homem-Aranha produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro Homem-Aranha</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-baby-groot.webp"
-              alt="Chaveiro Baby Groot produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro Baby Groot</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-martelo-thor.webp"
-              alt="Chaveiro martelo do Thor produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro martelo do Thor</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-stormtrooper.webp"
-              alt="Chaveiro Stormtrooper produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro Stormtrooper</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-capivara-tartaruga.webp"
-              alt="Chaveiro capivara com tartaruga produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro capivara com tartaruga</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-pomba.webp"
-              alt="Chaveiro pomba produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro pomba</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-tubarao.webp"
-              alt="Chaveiro tubarão produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro tubarão</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-princesa-peach-2.webp"
-              alt="Chaveiro Princesa Peach produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro Princesa Peach</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-homem-de-ferro.webp"
-              alt="Chaveiro Homem de Ferro produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro Homem de Ferro</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-cone-transito.webp"
-              alt="Chaveiro cone de trânsito produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro cone de trânsito</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiros-copos-stanley.webp"
-              alt="Chaveiros mini copos Stanley produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiros mini copos Stanley</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/chaveiro-pokebola.webp"
-              alt="Chaveiro Pokébola produzido em impressão 3D"
-              width="900"
-              height="1200"
-              loading="lazy"
-            >
-            <figcaption>Chaveiro Pokébola</figcaption>
-          </figure>
-        </div>
-
-        <div class="gallery-cta">
-          <p>Quer um chaveiro com seu nome, logo ou tema?</p>
-          <a
-            class="button button-primary"
-            href="https://wa.me/5511910634551?text=Ol%C3%A1,%20vim%20pelo%20site%20e%20quero%20um%20or%C3%A7amento%20de%20chaveiros%20personalizados."
-            target="_blank"
-            rel="noopener noreferrer"
-            data-whatsapp-cta
-            data-cta-label="galeria-chaveiros"
-          >
-            Pedir orçamento no WhatsApp
-          </a>
-        </div>
-      </section>
-
-      <section class="section-shell gallery-section" id="relogios">
-        <div class="section-heading">
-          <span class="eyebrow">Relógios de parede</span>
-          <h2>Relógios personalizados com o tema que você ama</h2>
-          <p>
-            Modelos temáticos para sala, escritório, garagem ou quarto gamer. Personalizamos com
-            a marca, time ou estilo que você quiser. Clique na foto para ampliar.
-          </p>
-        </div>
-
-        <h3 class="characters-gallery-group">Automotivo</h3>
-        <div class="gallery-grid gallery-grid-clocks">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-ferrari.webp"
-              alt="Relógio de parede tema Ferrari personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Ferrari</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-porsche.webp"
-              alt="Relógio de parede tema Porsche personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Porsche</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-porsche-gt3-rs.webp"
-              alt="Relógio de parede tema Porsche GT3 RS personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Porsche GT3 RS</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-audi-rs.webp"
-              alt="Relógio de parede tema Audi RS personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Audi RS</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-bmw-m.webp"
-              alt="Relógio de parede tema BMW M personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio BMW M</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-mercedes-amg.webp"
-              alt="Relógio de parede tema Mercedes-AMG personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Mercedes-AMG</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-bugatti.webp"
-              alt="Relógio de parede tema Bugatti personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Bugatti</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-dodge-challenger.webp"
-              alt="Relógio de parede tema Dodge Challenger personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Dodge Challenger</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-alpine.webp"
-              alt="Relógio de parede tema Alpine personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Alpine</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-michelin.webp"
-              alt="Relógio de parede tema Michelin personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Michelin</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-bridgestone.webp"
-              alt="Relógio de parede tema Bridgestone personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Bridgestone</figcaption>
-          </figure>
-        </div>
-        <h3 class="characters-gallery-group">Motos e velocidade</h3>
-        <div class="gallery-grid gallery-grid-clocks">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-harley-davidson.webp"
-              alt="Relógio de parede tema Harley-Davidson personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Harley-Davidson</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-yamaha.webp"
-              alt="Relógio de parede tema Yamaha personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Yamaha</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-kawasaki.webp"
-              alt="Relógio de parede tema Kawasaki personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Kawasaki</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-ktm.webp"
-              alt="Relógio de parede tema KTM personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio KTM</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-akrapovic.webp"
-              alt="Relógio de parede tema Akrapovič personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Akrapovič</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-motogp.webp"
-              alt="Relógio de parede tema MotoGP personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio MotoGP</figcaption>
-          </figure>
-        </div>
-        <h3 class="characters-gallery-group">Games</h3>
-        <div class="gallery-grid gallery-grid-clocks">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-playstation.webp"
-              alt="Relógio de parede tema PlayStation personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio PlayStation</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-xbox.webp"
-              alt="Relógio de parede tema Xbox personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Xbox</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-nintendo-switch.webp"
-              alt="Relógio de parede tema Nintendo Switch personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Nintendo Switch</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-pokemon-pikachu.webp"
-              alt="Relógio de parede tema Pokémon Pikachu personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Pokémon Pikachu</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-pokemon-squirtle.webp"
-              alt="Relógio de parede tema Pokémon Squirtle personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Pokémon Squirtle</figcaption>
-          </figure>
-        </div>
-        <h3 class="characters-gallery-group">Esportes e lifestyle</h3>
-        <div class="gallery-grid gallery-grid-clocks">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-nike.webp"
-              alt="Relógio de parede tema Nike personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Nike</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-adidas.webp"
-              alt="Relógio de parede tema Adidas personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Adidas</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-nba.webp"
-              alt="Relógio de parede tema NBA personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio NBA</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-olympique-lyonnais.webp"
-              alt="Relógio de parede tema Olympique Lyonnais personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Olympique Lyonnais</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-tag-heuer.webp"
-              alt="Relógio de parede tema TAG Heuer personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio TAG Heuer</figcaption>
-          </figure>
-        </div>
-        <h3 class="characters-gallery-group">Temas especiais</h3>
-        <div class="gallery-grid gallery-grid-clocks">
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-coca-cola.webp"
-              alt="Relógio de parede tema Coca-Cola personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Coca-Cola</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-palestine.webp"
-              alt="Relógio de parede tema Palestine personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Palestine</figcaption>
-          </figure>
-          <figure class="gallery-card gallery-card-clickable" data-lightbox>
-            <img
-              src="assets/products/relogios/relogio-poker.webp"
-              alt="Relógio de parede tema Poker personalizado"
-              width="1400"
-              height="1050"
-              loading="lazy"
-            >
-            <figcaption>Relógio Poker</figcaption>
-          </figure>
-        </div>
-
-        <div class="gallery-cta">
-          <p>Quer um relógio de parede com o tema do seu carro, time, game ou marca?</p>
-          <a
-            class="button button-primary"
-            href="https://wa.me/5511910634551?text=Ol%C3%A1,%20vim%20pelo%20site%20e%20quero%20um%20or%C3%A7amento%20de%20rel%C3%B3gio%20de%20parede%20personalizado."
-            target="_blank"
-            rel="noopener noreferrer"
-            data-whatsapp-cta
-            data-cta-label="galeria-relogios"
-          >
-            Pedir orçamento no WhatsApp
-          </a>
+        <div class="steps">
+          <article class="step">
+            <span class="num">01 / A IDEIA</span>
+            <h3>Conte o que imaginou</h3>
+            <p>Envie uma foto, desenho, tema ou referência pelo WhatsApp.</p>
+          </article>
+          <article class="step">
+            <span class="num">02 / OS DETALHES</span>
+            <h3>A gente cria junto</h3>
+            <p>Alinhamos possibilidades, cores, quantidade, prazo e orçamento.</p>
+          </article>
+          <article class="step">
+            <span class="num">03 / A TRANSFORMAÇÃO</span>
+            <h3>Sua ideia ganha forma</h3>
+            <p>Produzimos sua peça com cuidado, na nossa própria estrutura.</p>
+          </article>
         </div>
       </section>
 
       <section class="final-cta" id="contato">
         <div class="section-shell final-cta-content">
           <span class="eyebrow">Vamos produzir sua ideia?</span>
-          <h2>Tem uma ideia ou precisa de um produto personalizado?</h2>
-          <p>Envie sua referência e receba um orçamento pelo WhatsApp — ou deixe seu e-mail para novidades e ofertas.</p>
+          <h2>Tem uma ideia que ainda<br>não saiu do papel?</h2>
+          <p>Manda pra gente. Vamos descobrir como trazer ela para o 3D.</p>
           <div class="final-actions">
             <a
               class="button button-primary"
@@ -1340,7 +481,7 @@
               data-whatsapp-cta
               data-cta-label="chamada-final"
             >
-              Pedir Orçamento Agora
+              Pedir orçamento no WhatsApp <span class="arrow" aria-hidden="true">↗</span>
             </a>
             <a
               class="instagram-link"
@@ -1351,36 +492,6 @@
               Ver Instagram
             </a>
           </div>
-
-          <form class="lead-form" id="lead-form" novalidate>
-            <p class="lead-form-title">Receber novidades e ofertas</p>
-            <div class="lead-form-grid">
-              <label class="lead-field">
-                <span>Nome</span>
-                <input type="text" name="name" autocomplete="name" maxlength="120" placeholder="Seu nome">
-              </label>
-              <label class="lead-field">
-                <span>E-mail</span>
-                <input type="email" name="email" autocomplete="email" maxlength="180" placeholder="voce@email.com" required>
-              </label>
-              <label class="lead-field">
-                <span>WhatsApp (opcional)</span>
-                <input type="tel" name="phone" autocomplete="tel" maxlength="40" placeholder="(11) 90000-0000">
-              </label>
-            </div>
-            <label class="lead-honeypot" aria-hidden="true">
-              <span>Empresa</span>
-              <input type="text" name="company" tabindex="-1" autocomplete="off">
-            </label>
-            <label class="lead-consent">
-              <input type="checkbox" name="consent_email" value="1" required>
-              <span>Aceito receber comunicações da Taldo Studio 3D por e-mail. Posso cancelar quando quiser.</span>
-            </label>
-            <button class="button button-primary" type="submit" id="lead-form-submit">
-              Quero receber novidades
-            </button>
-            <p class="lead-form-status" id="lead-form-status" role="status" aria-live="polite" hidden></p>
-          </form>
         </div>
       </section>
     </main>
@@ -1400,6 +511,19 @@
         </a>
       </div>
     </footer>
+
+    <dialog class="preview-dialog" id="demo-preview" aria-labelledby="demo-title">
+      <span class="tag">Prévia de conteúdo</span>
+      <h2 id="demo-title"></h2>
+      <p id="demo-copy"></p>
+      <a
+        class="textlink"
+        href="https://www.instagram.com/taldostudio3d/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >Visitar o Instagram da Taldo <span class="arrow" aria-hidden="true">↗</span></a>
+      <button class="button button-secondary" type="button" id="demo-close">Voltar</button>
+    </dialog>
 
     <div class="promo-popup" id="promo-popup" hidden aria-hidden="true">
       <div class="promo-popup-dialog" role="dialog" aria-labelledby="promo-popup-title" aria-modal="true">
