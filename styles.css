@@ -238,14 +238,28 @@ svg {
   width: max-content;
   flex-shrink: 0;
   gap: 0;
+  -webkit-animation: brands-marquee-scroll 28s linear infinite;
   animation: brands-marquee-scroll 28s linear infinite;
   will-change: transform;
   backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+.brands-marquee-track.is-js-driven {
+  -webkit-animation: none;
+  animation: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .brands-marquee-viewport:hover .brands-marquee-track {
+  .brands-marquee-viewport:hover .brands-marquee-track:not(.is-js-driven) {
     animation-play-state: paused;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .brands-marquee-track {
+    animation-play-state: running;
   }
 }
 
@@ -298,6 +312,18 @@ svg {
   max-height: 58px;
 }
 
+@-webkit-keyframes brands-marquee-scroll {
+  from {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    -webkit-transform: translate3d(-50%, 0, 0);
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
 @keyframes brands-marquee-scroll {
   from {
     transform: translate3d(0, 0, 0);
@@ -305,20 +331,6 @@ svg {
 
   to {
     transform: translate3d(-50%, 0, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .brands-marquee-track {
-    animation: none;
-  }
-
-  .brands-marquee-viewport {
-    overflow-x: auto;
-  }
-
-  .hero-slideshow img {
-    transition: none;
   }
 }
 
@@ -710,12 +722,49 @@ h3 {
   border-radius: 0;
   transform: none;
   opacity: 0;
+  animation: hero-crossfade 36s infinite;
+}
+
+.hero-slideshow img:nth-child(1) { animation-delay: 0s; }
+.hero-slideshow img:nth-child(2) { animation-delay: 4.5s; }
+.hero-slideshow img:nth-child(3) { animation-delay: 9s; }
+.hero-slideshow img:nth-child(4) { animation-delay: 13.5s; }
+.hero-slideshow img:nth-child(5) { animation-delay: 18s; }
+.hero-slideshow img:nth-child(6) { animation-delay: 22.5s; }
+.hero-slideshow img:nth-child(7) { animation-delay: 27s; }
+.hero-slideshow img:nth-child(8) { animation-delay: 31.5s; }
+
+.hero-slideshow:not(.is-js-driven) img:first-child {
+  opacity: 1;
+}
+
+.hero-slideshow.is-js-driven img {
+  animation: none;
+  opacity: 0;
   transition: opacity 0.9s ease;
 }
 
-.hero-slideshow img.is-active {
+.hero-slideshow.is-js-driven img.is-active {
   opacity: 1;
   z-index: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero-slideshow:not(.is-js-driven):hover img {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes hero-crossfade {
+  0%,
+  10% {
+    opacity: 1;
+  }
+
+  14%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .float {
@@ -2524,8 +2573,15 @@ h3 {
     padding: 14px 0 18px;
   }
 
+  .brands-marquee-viewport {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
   .brands-marquee-track {
+    -webkit-animation-duration: 18s;
     animation-duration: 18s;
+    animation-play-state: running;
   }
 
   .brands-marquee-list {

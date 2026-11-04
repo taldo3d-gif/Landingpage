@@ -471,6 +471,50 @@
     });
   }
 
+  function canHoverPause() {
+    return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }
+
+  function bindBrandsMarquee(track) {
+    if (!track) {
+      return;
+    }
+
+    track.classList.add("is-js-driven");
+
+    let offset = 0;
+    let last = performance.now();
+    let paused = false;
+    const speed = 42;
+
+    if (canHoverPause()) {
+      const viewport = track.closest(".brands-marquee-viewport") || track;
+      viewport.addEventListener("mouseenter", () => {
+        paused = true;
+      });
+      viewport.addEventListener("mouseleave", () => {
+        paused = false;
+        last = performance.now();
+      });
+    }
+
+    function tick(now) {
+      if (!paused && !document.hidden) {
+        const delta = Math.min(48, now - last) / 1000;
+        offset -= speed * delta;
+        const loopWidth = track.scrollWidth / 2;
+        if (loopWidth > 0 && -offset >= loopWidth) {
+          offset += loopWidth;
+        }
+        track.style.transform = "translate3d(" + offset.toFixed(2) + "px,0,0)";
+      }
+      last = now;
+      window.requestAnimationFrame(tick);
+    }
+
+    window.requestAnimationFrame(tick);
+  }
+
   function bindHeroSlideshow(root) {
     if (!root) {
       return;
@@ -481,10 +525,7 @@
       return;
     }
 
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion) {
-      return;
-    }
+    root.classList.add("is-js-driven");
 
     const intervalMs = 4200;
     let index = slides.findIndex((slide) => slide.classList.contains("is-active"));
@@ -515,22 +556,16 @@
       }, intervalMs);
     }
 
-    root.addEventListener("mouseenter", stop);
-    root.addEventListener("mouseleave", start);
-    root.addEventListener("focusin", stop);
-    root.addEventListener("focusout", start);
+    if (canHoverPause()) {
+      root.addEventListener("mouseenter", stop);
+      root.addEventListener("mouseleave", start);
+    }
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        stop();
-      } else {
-        start();
-      }
-    });
-
+    window.addEventListener("pageshow", start);
     start();
   }
 
+  bindBrandsMarquee(document.querySelector(".brands-marquee-track"));
   bindHeroSlideshow(document.querySelector("[data-hero-slideshow]"));
 
   const filterButtons = document.querySelectorAll("[data-filter]");
