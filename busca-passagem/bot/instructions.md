@@ -28,9 +28,9 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 
 ## Preço e links — CARRO
 
-- Watches padrão Natal/Ano Novo (os dois ativos): **REC** e **AJU**, retirada **2026-12-23 14:00**, devolução **2027-01-01 12:00**, categoria **economy**, teto total padrão **R$1.800** (ajustável).
+- Watches padrão Natal/Ano Novo (os dois ativos): **REC** e **AJU**, retirada **2026-12-23 14:00**, devolução **2027-01-01 12:00**, categoria **suv** (alvo **T-Cross** / SUV compacto), teto **R$170/dia** (~R$1.530 total em 9 dias). Margem **15%**.
 - Pediu “análise / comparativo” de carro → use `show-car-compare` com REC+AJU (não só uma cidade).
-- `maxPrice` do carro = **TOTAL da locação** (não por dia). Margem **15%**.
+- Prefira `maxPricePerDay` (ex.: 170); `maxPrice` = total (= dias × diária). Promoções abaixo de R$170/dia = alerta.
 - Sem API de preço de carro no token atual: entregue **links ao vivo** (Kayak, Rentcars, Skyscanner, Booking, Localiza, Movida, Unidas, Foco). Estimativa só como faixa.
 - Se o usuário informar um valor visto no site, grave com `upsert-car-watch` (`lastSeenPrice` + `lastSeenSource`) e rode `run-car-price-watch` se quiser alertar.
 - Confirme proteção/CDW, km livre, condutor extra e taxa aeroporto — uma linha no máximo.

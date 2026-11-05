@@ -45,7 +45,9 @@ export function searchCarPrices(input: {
   pickupTime?: string;
   dropoffTime?: string;
   category?: CarCategory;
+  modelHint?: string | null;
   maxPrice?: number;
+  maxPricePerDay?: number | null;
   marginPct?: number;
   driverAge?: number;
   currency?: string;
@@ -56,6 +58,7 @@ export function searchCarPrices(input: {
   mode: "recorded" | "estimate";
   days: number;
   ceiling: number | null;
+  ceilingPerDay: number | null;
   links: CarBuyLinks;
   quotes: CarQuote[];
   underCeiling: CarQuote[];
@@ -66,7 +69,17 @@ export function searchCarPrices(input: {
   const currency = (input.currency ?? "BRL").toUpperCase();
   const marginPct = input.marginPct ?? 15;
   const days = rentalDayCount(input.pickupDate, input.dropoffDate);
-  const ceiling = effectiveCarCeiling(input.maxPrice, marginPct);
+  const derivedTotal =
+    input.maxPrice ??
+    (input.maxPricePerDay != null
+      ? Math.round(input.maxPricePerDay * days)
+      : undefined);
+  const ceiling = effectiveCarCeiling(derivedTotal, marginPct);
+  const ceilingPerDay =
+    ceiling != null ? Math.round(ceiling / days) : null;
+  const targetPerDay =
+    input.maxPricePerDay ??
+    (derivedTotal != null ? Math.round(derivedTotal / days) : null);
   const links = buildCarBuyLinks({
     pickupIata: input.pickupIata,
     pickupDate: input.pickupDate,
@@ -120,6 +133,7 @@ export function searchCarPrices(input: {
 
   const place =
     input.pickupLabel ?? `Aeroporto ${input.pickupIata.toUpperCase()}`;
+  const modelBit = input.modelHint ? ` · alvo ${input.modelHint}` : "";
   const money = (n: number) => {
     try {
       return new Intl.NumberFormat("pt-BR", {
@@ -134,27 +148,35 @@ export function searchCarPrices(input: {
 
   const quoteLines = quotes.map((q, i) => {
     const tag = q.source === "recorded" ? "visto ao vivo" : "estimativa";
+    const vsDaily =
+      targetPerDay != null
+        ? q.pricePerDay <= targetPerDay
+          ? " ≤ teto/dia"
+          : " acima do teto/dia"
+        : "";
     return (
-      `${i + 1}. ${money(q.price)} total (~${money(q.pricePerDay)}/dia)` +
+      `${i + 1}. ${money(q.price)} total (~${money(q.pricePerDay)}/dia${vsDaily})` +
       ` · ${q.category} · ${q.supplier ?? "—"} · ${tag}`
     );
   });
 
   const teto =
-    input.maxPrice != null
-      ? ` · teto ${money(input.maxPrice)} total` +
-        ` (margem ${marginPct}% → ${money(ceiling ?? input.maxPrice)})`
+    derivedTotal != null
+      ? ` · teto ${money(targetPerDay ?? Math.round(derivedTotal / days))}/dia` +
+        ` (= ${money(derivedTotal)} total, margem ${marginPct}% → ${money(ceiling ?? derivedTotal)}` +
+        (ceilingPerDay != null ? ` / ~${money(ceilingPerDay)}/dia` : "") +
+        ")"
       : "";
 
   const note =
     mode === "recorded"
-      ? "Há preço registrado pelo usuário/agente; abra os links para confirmar ao vivo."
-      : "Sem API de preço de carro no token atual — use os links para cotação ao vivo. Estimativa só como faixa.";
+      ? "Há preço registrado pelo usuário/agente; abra os links para confirmar ao vivo (promo T-Cross/SUV se aparecer)."
+      : "Sem API de preço de carro no token atual — use os links para cotação ao vivo. Procure promo SUV/T-Cross ≤ teto/dia. Estimativa só como faixa.";
 
   const chatMarkdown = [
     `🚗 ${place} · ${input.pickupDate} ${input.pickupTime ?? "14:00"}` +
       ` → ${input.dropoffDate} ${input.dropoffTime ?? "12:00"}` +
-      ` · ${days} dia(s) · ${category}${teto}`,
+      ` · ${days} dia(s) · ${category}${modelBit}${teto}`,
     "",
     ...quoteLines,
     "",
@@ -169,6 +191,7 @@ export function searchCarPrices(input: {
     mode,
     days,
     ceiling,
+    ceilingPerDay,
     links,
     quotes,
     underCeiling,
@@ -187,7 +210,9 @@ export function carWatchSearchInput(watch: CarWatch) {
     pickupTime: watch.pickupTime,
     dropoffTime: watch.dropoffTime,
     category: watch.category,
+    modelHint: watch.modelHint,
     maxPrice: watch.maxPrice,
+    maxPricePerDay: watch.maxPricePerDay,
     marginPct: watch.marginPct,
     driverAge: watch.driverAge,
     currency: watch.currency,

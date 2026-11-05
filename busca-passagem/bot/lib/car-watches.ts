@@ -57,7 +57,10 @@ export async function getCarWatch(
     pickupTime: w.pickupTime ?? "14:00",
     dropoffTime: w.dropoffTime ?? "12:00",
     category: asCategory(w.category),
+    modelHint: w.modelHint ?? null,
     maxPrice: w.maxPrice,
+    maxPricePerDay:
+      typeof w.maxPricePerDay === "number" ? w.maxPricePerDay : null,
     marginPct: typeof w.marginPct === "number" ? w.marginPct : 15,
     currency: w.currency ?? "BRL",
     driverAge: typeof w.driverAge === "number" ? w.driverAge : 25,

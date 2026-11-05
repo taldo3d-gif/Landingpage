@@ -94,16 +94,20 @@ export default defineTool({
         }
       }
 
+      const perDay =
+        watch.maxPricePerDay ??
+        Math.round(watch.maxPrice / Math.max(1, search.days));
       const route =
         `${watch.pickupLabel} · ${watch.pickupDate} ${watch.pickupTime}` +
         ` → ${watch.dropoffDate} ${watch.dropoffTime}` +
-        ` · ${search.days}d · ${watch.category}`;
+        ` · ${search.days}d · ${watch.category}` +
+        (watch.modelHint ? ` (~${watch.modelHint})` : "");
       const priceLine = recorded
         ? `Visto ao vivo: ${recorded.price} ${recorded.currency} total` +
           ` (~${recorded.pricePerDay}/dia)` +
           (recorded.supplier ? ` · ${recorded.supplier}` : "")
         : `Sem preço ao vivo registrado — estimativa ~${cheapest?.price ?? "?"} ${watch.currency} total` +
-          ` (~${cheapest?.pricePerDay ?? "?"}/dia). Abra os links.`;
+          ` (~${cheapest?.pricePerDay ?? "?"}/dia). Abra os links (promo SUV/T-Cross).`;
 
       const kind = underMax ? "under_ceiling" : "daily_digest";
       const text = [
@@ -111,7 +115,7 @@ export default defineTool({
           ? "Aluguel abaixo do teto (com margem)"
           : "Monitor aluguel de carro — links do dia",
         route,
-        `Teto: ${watch.maxPrice} ${watch.currency} total (margem ${marginPct}% → ${ceiling})`,
+        `Teto: R$${perDay}/dia (= ${watch.maxPrice} ${watch.currency} total, margem ${marginPct}% → ${ceiling})`,
         priceLine,
         watch.notes ? `Notas: ${watch.notes}` : "",
         "",

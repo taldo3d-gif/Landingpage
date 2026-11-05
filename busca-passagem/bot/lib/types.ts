@@ -83,7 +83,7 @@ export type CarCategory =
 
 /**
  * Car rental price watch (pickup/dropoff + total ceiling).
- * maxPrice = total for the whole rental (not per day).
+ * maxPrice = total for the whole rental; maxPricePerDay is the preferred user ceiling.
  */
 export type CarWatch = {
   id: string;
@@ -99,8 +99,14 @@ export type CarWatch = {
   /** Local HH:mm */
   dropoffTime: string;
   category: CarCategory;
+  /**
+   * Preferred model hint (e.g. "T-Cross") — category still drives filters.
+   */
+  modelHint: string | null;
   /** Ceiling for the FULL rental period (BRL total). */
   maxPrice: number;
+  /** Preferred daily ceiling (BRL/day). Used to derive/display maxPrice. */
+  maxPricePerDay: number | null;
   /** Allow up to maxPrice * (1 + marginPct/100). Default 15. */
   marginPct: number;
   currency: string;
