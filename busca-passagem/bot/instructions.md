@@ -11,7 +11,7 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 2. Watches de carro com `upsert-car-watch` quando pedir aluguel / locação.
 3. Busca voo: sempre `show-deals-board` e cole **apenas** o `chatMarkdown` na resposta.
 4. Busca carro (uma cidade): `show-car-deals-board` e cole **apenas** o `chatMarkdown`.
-5. Análise REC **e** AJU (ou mais cidades): `show-car-compare` (padrão `iatas: ["REC","AJU"]`) e cole **apenas** o `chatMarkdown`.
+5. Análise REC **e** MCZ (Maceió): `show-car-compare` (padrão `iatas: ["REC","MCZ"]`) e cole **apenas** o `chatMarkdown`.
 6. Pode demorar — espere a tool.
 7. Schedule/WhatsApp: preço + bloco completo de links (`formatLinksMessage` / links de carro).
 
@@ -28,11 +28,12 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 
 ## Preço e links — CARRO
 
-- Watches padrão Natal/Ano Novo (os dois ativos): **REC** e **AJU**, retirada **2026-12-23 14:00**, devolução **2027-01-01 12:00**, categoria **suv** (alvo **T-Cross** / SUV compacto), teto **R$170/dia** (~R$1.530 total em 9 dias). Margem **15%**.
-- Pediu “análise / comparativo” de carro → use `show-car-compare` com REC+AJU (não só uma cidade).
-- Prefira `maxPricePerDay` (ex.: 170); `maxPrice` = total (= dias × diária). Promoções abaixo de R$170/dia = alerta.
-- Sem API de preço de carro no token atual: entregue **links ao vivo** (Kayak, Rentcars, Skyscanner, Booking, Localiza, Movida, Unidas, Foco). Estimativa só como faixa.
-- Se o usuário informar um valor visto no site, grave com `upsert-car-watch` (`lastSeenPrice` + `lastSeenSource`) e rode `run-car-price-watch` se quiser alertar.
+- Watches padrão Natal/Ano Novo (ativos): **REC** e **MCZ** (Maceió) — **não AJU**. Retirada **2026-12-23 14:00**, devolução **2027-01-01 12:00**, categoria **suv** (alvo **T-Cross**), teto **R$170/dia** (~R$1.530 / 9 dias). Margem **15%**.
+- Pediu “análise / comparativo” de carro → `show-car-compare` com REC+MCZ (inclui diretório de lojas).
+- Prefira `maxPricePerDay` (170); `maxPrice` = total. Promo ≤ R$170/dia = alerta.
+- Sem API de preço de carro: links ao vivo. Prioridade: **Localiza (deep link com datas)** → Foco/Movida → Kayak SUV.
+- Lojas aeroporto: REC = Localiza, Movida, Unidas, Foco (várias na Av. Mascarenhas, fora do terminal). MCZ = Localiza/Movida/Unidas no térreo + Foco com transfer.
+- Se o usuário informar valor visto, grave `lastSeenPrice` + `lastSeenSource`.
 - Confirme proteção/CDW, km livre, condutor extra e taxa aeroporto — uma linha no máximo.
 
 ## O que mostrar — voos
@@ -47,7 +48,7 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 ## O que mostrar — carro
 
 - Uma cidade: `chatMarkdown` de `show-car-deals-board`
-- REC vs AJU (ou lista): `chatMarkdown` de `show-car-compare`
+- REC vs MCZ (ou lista): `chatMarkdown` de `show-car-compare`
 
 ## Não mostrar
 

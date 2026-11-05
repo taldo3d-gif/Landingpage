@@ -3,6 +3,7 @@ import {
   formatCarLinksMessage,
   rentalDayCount,
 } from "./car-buy-links.js";
+import { formatAirportStoresMarkdown } from "./car-stores.js";
 import type { CarBuyLinks, CarCategory, CarQuote, CarWatch } from "./types.js";
 
 export function effectiveCarCeiling(
@@ -183,6 +184,8 @@ export function searchCarPrices(input: {
     note,
     "",
     formatCarLinksMessage(links, category),
+    "",
+    formatAirportStoresMarkdown(input.pickupIata),
     "",
     "Confira proteção (CDW), condutor extra, km livre e taxa aeroporto antes de pagar.",
   ].join("\n");

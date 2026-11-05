@@ -1,6 +1,8 @@
 import { defineTool } from "@grok/agent-sdk/tools";
 import * as z from "zod/v4";
+import { rentalDayCount } from "../lib/car-buy-links.js";
 import { carWatchSearchInput, searchCarPrices } from "../lib/car-prices.js";
+import { airportStores } from "../lib/car-stores.js";
 import { listCarWatches } from "../lib/car-watches.js";
 import type { CarWatch } from "../lib/types.js";
 
@@ -24,9 +26,22 @@ function money(price: number, currency: string): string {
   }
 }
 
+function defaultLabel(iata: string): string {
+  switch (iata) {
+    case "REC":
+      return "Aeroporto de Recife (REC / Guararapes)";
+    case "MCZ":
+      return "Aeroporto de Maceió (MCZ / Zumbi dos Palmares)";
+    case "AJU":
+      return "Aeroporto de Aracaju (AJU / Santa Maria)";
+    default:
+      return `Aeroporto ${iata}`;
+  }
+}
+
 export default defineTool({
   description:
-    "Compare car rental for 2+ airports (default REC + AJU) on the same dates. Paste ONLY chatMarkdown. Prefer active car watches when present.",
+    "Compare car rental for 2+ airports (default REC + MCZ) on the same dates, with store directory. Paste ONLY chatMarkdown. Prefer active car watches when present.",
   effect: "read",
   inputSchema: z.object({
     iatas: z
@@ -34,53 +49,49 @@ export default defineTool({
       .min(1)
       .max(5)
       .optional()
-      .describe("Airports to compare, default [REC, AJU]"),
+      .describe("Airports to compare, default [REC, MCZ]"),
     pickupDate: z.string().optional(),
     dropoffDate: z.string().optional(),
     pickupTime: z.string().optional(),
     dropoffTime: z.string().optional(),
     category: categorySchema.optional(),
     maxPrice: z.number().positive().optional(),
+    maxPricePerDay: z.number().positive().optional(),
   }),
   async execute(input, ctx) {
-    const wanted = (input.iatas ?? ["REC", "AJU"]).map((x) => x.toUpperCase());
+    const wanted = (input.iatas ?? ["REC", "MCZ"]).map((x) => x.toUpperCase());
     const all = await listCarWatches(ctx.host.kv);
     const active = all.filter((w) => w.active);
+
+    const pickupDate = input.pickupDate ?? "2026-12-23";
+    const dropoffDate = input.dropoffDate ?? "2027-01-01";
+    const days = rentalDayCount(pickupDate, dropoffDate);
+    const perDay = input.maxPricePerDay ?? 170;
+    const totalCeiling = input.maxPrice ?? perDay * days;
 
     const picks: CarWatch[] = [];
     for (const iata of wanted) {
       const fromWatch =
         active.find((w) => w.pickupIata === iata) ??
-        all.find((w) => w.pickupIata === iata);
+        all.find((w) => w.pickupIata === iata && w.active !== false);
       if (fromWatch) {
         picks.push(fromWatch);
         continue;
       }
-      // Synthetic watch from args / defaults (Natal-Ano Novo)
       picks.push({
         id: `adhoc-${iata}`,
         pickupIata: iata,
-        pickupLabel:
-          iata === "REC"
-            ? "Aeroporto de Recife (REC / Guararapes)"
-            : iata === "AJU"
-              ? "Aeroporto de Aracaju (AJU / Santa Maria)"
-              : `Aeroporto ${iata}`,
+        pickupLabel: defaultLabel(iata),
         dropoffIata: iata,
-        dropoffLabel:
-          iata === "REC"
-            ? "Aeroporto de Recife (REC / Guararapes)"
-            : iata === "AJU"
-              ? "Aeroporto de Aracaju (AJU / Santa Maria)"
-              : `Aeroporto ${iata}`,
-        pickupDate: input.pickupDate ?? "2026-12-23",
-        dropoffDate: input.dropoffDate ?? "2027-01-01",
+        dropoffLabel: defaultLabel(iata),
+        pickupDate,
+        dropoffDate,
         pickupTime: input.pickupTime ?? "14:00",
         dropoffTime: input.dropoffTime ?? "12:00",
         category: input.category ?? "suv",
         modelHint: "T-Cross",
-        maxPricePerDay: 170,
-        maxPrice: input.maxPrice ?? 170 * 9,
+        maxPricePerDay: perDay,
+        maxPrice: totalCeiling,
         marginPct: 15,
         currency: "BRL",
         driverAge: 25,
@@ -93,12 +104,14 @@ export default defineTool({
       });
     }
 
-    // Optional overrides applied to every city
     const rows = picks.map((w) => {
       const search = searchCarPrices({
         ...carWatchSearchInput(w),
         ...(input.category ? { category: input.category } : {}),
         ...(input.maxPrice != null ? { maxPrice: input.maxPrice } : {}),
+        ...(input.maxPricePerDay != null
+          ? { maxPricePerDay: input.maxPricePerDay }
+          : {}),
         ...(input.pickupDate ? { pickupDate: input.pickupDate } : {}),
         ...(input.dropoffDate ? { dropoffDate: input.dropoffDate } : {}),
         ...(input.pickupTime ? { pickupTime: input.pickupTime } : {}),
@@ -118,37 +131,56 @@ export default defineTool({
     const summaryLines = ranked.map((r, i) => {
       const tag = r.recorded ? "visto" : "estimativa";
       const p = r.best;
+      const dayCeil =
+        r.watch.maxPricePerDay ??
+        Math.round(r.watch.maxPrice / Math.max(1, r.search.days));
       return (
         `${i + 1}) ${r.watch.pickupIata} · ` +
         (p
           ? `${money(p.price, p.currency)} total (~${money(p.pricePerDay, p.currency)}/dia) · ${tag}`
           : "sem cotação") +
-        (r.watch.maxPrice
-          ? ` · teto ${money(r.watch.maxPrice, r.watch.currency)}`
-          : "")
+        ` · teto ${money(dayCeil, r.watch.currency)}/dia` +
+        (r.watch.modelHint ? ` · alvo ${r.watch.modelHint}` : "")
       );
     });
 
-    const detailBlocks = rows.map((r) => r.search.chatMarkdown);
+    const storeSummary = wanted
+      .map((iata) => {
+        const info = airportStores(iata);
+        if (!info) return null;
+        const brands = info.stores.map((s) => s.brand).join(", ");
+        return `• ${iata}: ${brands}`;
+      })
+      .filter(Boolean) as string[];
 
     const parts: string[] = [
       `Comparativo aluguel · ${wanted.join(" vs ")}` +
         ` · ${rows[0]?.watch.pickupDate ?? "?"} → ${rows[0]?.watch.dropoffDate ?? "?"}` +
-        ` · ${input.category ?? rows[0]?.watch.category ?? "economy"}`,
+        ` · ${input.category ?? rows[0]?.watch.category ?? "suv"}` +
+        ` · alvo T-Cross · teto R$${perDay}/dia`,
       "",
-      "Resumo (mais barato primeiro):",
+      "Locadoras no aeroporto:",
+      ...storeSummary,
+      "",
+      "Resumo (faixa; abra Localiza/Kayak pra preço ao vivo):",
       ...summaryLines,
     ];
     if (winner?.best) {
       parts.push(
         "",
-        `Mais barato na faixa atual: ${winner.watch.pickupIata} (${money(winner.best.price, winner.best.currency)}).`,
+        `Faixa mais baixa agora: ${winner.watch.pickupIata} (~${money(winner.best.price, winner.best.currency)}). Confirme ao vivo — alta temporada costuma ficar acima de R$${perDay}/dia.`,
       );
     }
-    parts.push("", "— Detalhe por cidade —", "");
-    detailBlocks.forEach((block, i) => {
+    parts.push(
+      "",
+      "Como escolher: 1) Localiza com datas preenchidas (grupo SUV/GX)  2) Foco/Movida  3) Kayak pra cruzar preço.",
+      "",
+      "— Detalhe por cidade —",
+      "",
+    );
+    rows.forEach((r, i) => {
       if (i > 0) parts.push("", "———", "");
-      parts.push(block);
+      parts.push(r.search.chatMarkdown);
     });
 
     return {
@@ -160,6 +192,7 @@ export default defineTool({
         mode: r.search.mode,
         bestTotal: r.best?.price ?? null,
         ceiling: r.search.ceiling,
+        stores: airportStores(r.watch.pickupIata)?.stores.map((s) => s.brand) ?? [],
       })),
       chatMarkdown: parts.join("\n"),
     };

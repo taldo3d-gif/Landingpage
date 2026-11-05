@@ -60,7 +60,7 @@ function airportMeta(iata: string): AirportMeta {
         discoverPath: "brazil/recife",
         skyscannerSlug: "recife/recife",
         localizaAgencyCode: "AAREC",
-        focoPath: "lojas/aeroporto-internacional-do-recife/",
+        focoPath: "rede-de-lojas",
       };
     case "AJU":
       return {
@@ -75,12 +75,12 @@ function airportMeta(iata: string): AirportMeta {
     case "MCZ":
       return {
         placeName: "Aeroporto de Maceió",
-        expediaLocn: "Maceio, Brazil (MCZ)",
+        expediaLocn: "Maceio, Brazil (MCZ-Zumbi dos Palmares)",
         rentcarsPath: "aeroportos/brasil/mcz-zumbi-dos-palmares-maceio-alagoas",
         discoverPath: "brazil/maceio",
         skyscannerSlug: "maceio/maceio",
         localizaAgencyCode: "AAMCZ",
-        focoPath: "",
+        focoPath: "rede-de-lojas/aluguel-carro-aeroporto-maceio-mcz",
       };
     default:
       return {
@@ -202,6 +202,12 @@ export function buildCarBuyLinks(input: {
       })
     : "https://www.localiza.com/brasil/pt-br";
 
+  const movidaStore =
+    iata === "REC"
+      ? "https://www.movida.com.br/loja/recife-aeroporto"
+      : iata === "MCZ"
+        ? "https://www.movida.com.br/loja/maceio-aeroporto"
+        : "https://www.movida.com.br/";
   const movidaQ = new URLSearchParams({
     localRetirada: meta.placeName,
     dataRetirada: ddmmyyyy(input.pickupDate),
@@ -209,14 +215,17 @@ export function buildCarBuyLinks(input: {
     horaRetirada: pickupTime,
     horaDevolucao: dropoffTime,
   });
-  const movida = `https://www.movida.com.br/?${movidaQ.toString()}`;
+  // Store page + query hints (SPA); query helps when homepage form picks them up.
+  const movida = `${movidaStore}?${movidaQ.toString()}`;
 
   const unidas = "https://www.unidas.com.br/";
   const foco = meta.focoPath
-    ? `https://www.focoalugueldecarros.com.br/${meta.focoPath}`
-    : "https://www.focoalugueldecarros.com.br/";
+    ? meta.focoPath.startsWith("rede-de-lojas")
+      ? `https://www.aluguefoco.com.br/${meta.focoPath}`
+      : `https://www.focoalugueldecarros.com.br/${meta.focoPath}`
+    : "https://www.aluguefoco.com.br/rede-de-lojas";
 
-  // Prefer economy/compact sorts on Kayak when asked
+  // Prefer economy/compact sorts on Kayak when asked; SUV for T-Cross class.
   const kayakWithClass =
     category === "economy" || category === "compact"
       ? `${kayak}&fs=carclass=small`
@@ -244,19 +253,17 @@ export function formatCarLinksMessage(
 ): string {
   const hint = category ? ` (${categoryHint(category)})` : "";
   return [
-    `Comparar aluguel${hint}:`,
-    `Kayak: ${links.kayak}`,
+    `Reservar nas locadoras${hint} (melhor caminho pro T-Cross/SUV):`,
+    `Localiza (datas preenchidas): ${links.localiza}`,
+    `Movida (loja aeroporto): ${links.movida}`,
+    `Foco: ${links.foco}`,
+    `Unidas: ${links.unidas}`,
+    "",
+    `Comparar preço${hint}:`,
+    `Kayak SUV: ${links.kayak}`,
     `Rentcars: ${links.rentcars}`,
     `Skyscanner: ${links.skyscanner}`,
     `Booking Cars: ${links.booking}`,
-    `Expedia: ${links.expedia}`,
-    `DiscoverCars: ${links.discoverCars}`,
-    "",
-    "Locadoras BR (aeroporto):",
-    `Localiza: ${links.localiza}`,
-    `Movida: ${links.movida}`,
-    `Unidas: ${links.unidas}`,
-    `Foco: ${links.foco}`,
   ].join("\n");
 }
 

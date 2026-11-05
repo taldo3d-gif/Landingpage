@@ -17,7 +17,7 @@ function defaultLabel(iata: string): string {
     case "REC":
       return "Aeroporto de Recife (REC / Guararapes)";
     case "MCZ":
-      return "Aeroporto de Maceió (MCZ)";
+      return "Aeroporto de Maceió (MCZ / Zumbi dos Palmares)";
     case "AJU":
       return "Aeroporto de Aracaju (AJU / Santa Maria)";
     default:
