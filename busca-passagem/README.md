@@ -30,11 +30,12 @@ Sem `TRAVELPAYOUTS_TOKEN` → **mock**. Com token → cache Aviasales real.
 
 ## Aluguel de carro
 
-Tools: `upsert-car-watch`, `list-car-watches`, `show-car-deals-board`, `run-car-price-watch`.  
+Tools: `upsert-car-watch`, `list-car-watches`, `show-car-deals-board`, `show-car-compare`, `run-car-price-watch`.  
 Schedule: `car-price-watch` (a cada 6h; digest WhatsApp 1×/dia).
 
 - `maxPrice` = **total** da locação (BRL), não por dia.
 - Sem API de preço de carro no token: board entrega **links ao vivo** + faixa estimada.
 - Grave um valor visto com `lastSeenPrice` no `upsert-car-watch` para alertar abaixo do teto.
+- Comparativo REC vs AJU: `show-car-compare` (padrão `iatas: ["REC","AJU"]`).
 
-Exemplo Natal/Ano Novo REC: retirada `2026-12-23 14:00`, devolução `2027-01-01 12:00`, economia, teto `1800`.
+Watches Natal/Ano Novo: **REC** e **AJU**, retirada `2026-12-23 14:00`, devolução `2027-01-01 12:00`, economia, teto `1800`.

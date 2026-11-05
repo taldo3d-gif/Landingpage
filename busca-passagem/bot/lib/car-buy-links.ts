@@ -38,6 +38,62 @@ function kayakCitySlug(iata: string): string {
   }
 }
 
+type AirportMeta = {
+  placeName: string;
+  expediaLocn: string;
+  rentcarsPath: string | null;
+  discoverPath: string;
+  skyscannerSlug: string;
+  localizaPath: string;
+  focoPath: string;
+};
+
+function airportMeta(iata: string): AirportMeta {
+  switch (iata.toUpperCase()) {
+    case "REC":
+      return {
+        placeName: "Aeroporto de Recife",
+        expediaLocn: "Recife, Brazil (REC-Guararapes Intl.)",
+        rentcarsPath:
+          "aeroportos/brasil/rec-guararapes-gilberto-freyre-recife-pernambuco",
+        discoverPath: "brazil/recife",
+        skyscannerSlug: "recife/recife",
+        localizaPath: "rede-de-agencias/aeroporto-de-recife",
+        focoPath: "lojas/aeroporto-internacional-do-recife/",
+      };
+    case "AJU":
+      return {
+        placeName: "Aeroporto de Aracaju",
+        expediaLocn: "Aracaju, Brazil (AJU-Santa Maria)",
+        rentcarsPath: "aeroportos/brasil/aju-santa-maria-aracaju-sergipe",
+        discoverPath: "brazil/aracaju",
+        skyscannerSlug: "aracaju/aracaju",
+        localizaPath: "rede-de-agencias/aeroporto-santa-maria",
+        focoPath: "",
+      };
+    case "MCZ":
+      return {
+        placeName: "Aeroporto de Maceió",
+        expediaLocn: "Maceio, Brazil (MCZ)",
+        rentcarsPath: "aeroportos/brasil/mcz-zumbi-dos-palmares-maceio-alagoas",
+        discoverPath: "brazil/maceio",
+        skyscannerSlug: "maceio/maceio",
+        localizaPath: "rede-de-agencias/aeroporto-de-maceio",
+        focoPath: "",
+      };
+    default:
+      return {
+        placeName: iata.toUpperCase(),
+        expediaLocn: iata.toUpperCase(),
+        rentcarsPath: null,
+        discoverPath: "brazil",
+        skyscannerSlug: "",
+        localizaPath: "",
+        focoPath: "",
+      };
+  }
+}
+
 function categoryHint(category: CarCategory): string {
   switch (category) {
     case "economy":
@@ -67,6 +123,7 @@ export function buildCarBuyLinks(input: {
   driverAge?: number;
 }): CarBuyLinks {
   const iata = input.pickupIata.toUpperCase();
+  const meta = airportMeta(iata);
   const pickupTime = padTime(input.pickupTime ?? "14:00");
   const dropoffTime = padTime(input.dropoffTime ?? "12:00");
   const pickupHour = timeHour(pickupTime);
@@ -78,16 +135,15 @@ export function buildCarBuyLinks(input: {
   const kayak = `https://www.kayak.com.br/cars/${city}/${input.pickupDate}-${pickupHour}h/${input.dropoffDate}-${dropoffHour}h?sort=price_a`;
 
   const rentcarsParams = new URLSearchParams({
-    pickupLocation: iata === "REC" ? "Aeroporto de Recife" : iata,
+    pickupLocation: meta.placeName,
     pickupDate: input.pickupDate,
     returnDate: input.dropoffDate,
     pickupTime,
     returnTime: dropoffTime,
   });
-  const rentcars =
-    iata === "REC"
-      ? `https://www.rentcars.com/pt-br/aeroportos/brasil/rec-guararapes-gilberto-freyre-recife-pernambuco?${rentcarsParams.toString()}`
-      : `https://www.rentcars.com/pt-br/?${rentcarsParams.toString()}`;
+  const rentcars = meta.rentcarsPath
+    ? `https://www.rentcars.com/pt-br/${meta.rentcarsPath}?${rentcarsParams.toString()}`
+    : `https://www.rentcars.com/pt-br/?${rentcarsParams.toString()}`;
 
   const booking = `https://www.booking.com/cars/airport/br/${iata.toLowerCase()}.pt-br.html`;
 
@@ -95,29 +151,26 @@ export function buildCarBuyLinks(input: {
     {
       date1: input.pickupDate,
       date2: input.dropoffDate,
-      locn: iata === "REC" ? "Recife, Brazil (REC-Guararapes Intl.)" : iata,
+      locn: meta.expediaLocn,
       time1: `${pickupHour}00AM`,
       time2: `${dropoffHour}00AM`,
     },
   ).toString()}`;
 
-  const discoverCars = `https://www.discovercars.com/br/brazil/recife?date_from=${input.pickupDate}&date_to=${input.dropoffDate}`;
+  const discoverCars = `https://www.discovercars.com/br/${meta.discoverPath}?date_from=${input.pickupDate}&date_to=${input.dropoffDate}`;
 
   const skyPick = yymmdd(input.pickupDate);
   const skyDrop = yymmdd(input.dropoffDate);
-  const skyscanner =
-    iata === "REC"
-      ? `https://www.skyscanner.com.br/aluguel-de-carros/recife/recife/${skyPick}/${skyDrop}/?pickuptime=${pickupTime}&dropofftime=${dropoffTime}&driversage=${age}`
-      : `https://www.skyscanner.com.br/aluguel-de-carros/?pickupplace=${iata}&pickupdate=${skyPick}&dropoffdate=${skyDrop}`;
+  const skyscanner = meta.skyscannerSlug
+    ? `https://www.skyscanner.com.br/aluguel-de-carros/${meta.skyscannerSlug}/${skyPick}/${skyDrop}/?pickuptime=${pickupTime}&dropofftime=${dropoffTime}&driversage=${age}`
+    : `https://www.skyscanner.com.br/aluguel-de-carros/?pickupplace=${iata}&pickupdate=${skyPick}&dropoffdate=${skyDrop}`;
 
-  // Fleet sites — SPA forms; land on airport / search with query hints
-  const localiza =
-    iata === "REC"
-      ? "https://www.localiza.com/brasil/pt-br/rede-de-agencias/aeroporto-de-recife"
-      : "https://www.localiza.com/brasil/pt-br";
+  const localiza = meta.localizaPath
+    ? `https://www.localiza.com/brasil/pt-br/${meta.localizaPath}`
+    : "https://www.localiza.com/brasil/pt-br";
 
   const movidaQ = new URLSearchParams({
-    localRetirada: iata === "REC" ? "Aeroporto de Recife" : iata,
+    localRetirada: meta.placeName,
     dataRetirada: ddmmyyyy(input.pickupDate),
     dataDevolucao: ddmmyyyy(input.dropoffDate),
     horaRetirada: pickupTime,
@@ -126,10 +179,9 @@ export function buildCarBuyLinks(input: {
   const movida = `https://www.movida.com.br/?${movidaQ.toString()}`;
 
   const unidas = "https://www.unidas.com.br/";
-  const foco =
-    iata === "REC"
-      ? "https://www.focoalugueldecarros.com.br/lojas/aeroporto-internacional-do-recife/"
-      : "https://www.focoalugueldecarros.com.br/";
+  const foco = meta.focoPath
+    ? `https://www.focoalugueldecarros.com.br/${meta.focoPath}`
+    : "https://www.focoalugueldecarros.com.br/";
 
   // Prefer economy/compact sorts on Kayak when asked
   const kayakWithClass =

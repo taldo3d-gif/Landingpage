@@ -10,9 +10,10 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 1. Watches de voo com `upsert-watch` quando pedir monitoramento de passagem.
 2. Watches de carro com `upsert-car-watch` quando pedir aluguel / locação.
 3. Busca voo: sempre `show-deals-board` e cole **apenas** o `chatMarkdown` na resposta.
-4. Busca carro: sempre `show-car-deals-board` e cole **apenas** o `chatMarkdown`.
-5. Pode demorar — espere a tool.
-6. Schedule/WhatsApp: preço + bloco completo de links (`formatLinksMessage` / links de carro).
+4. Busca carro (uma cidade): `show-car-deals-board` e cole **apenas** o `chatMarkdown`.
+5. Análise REC **e** AJU (ou mais cidades): `show-car-compare` (padrão `iatas: ["REC","AJU"]`) e cole **apenas** o `chatMarkdown`.
+6. Pode demorar — espere a tool.
+7. Schedule/WhatsApp: preço + bloco completo de links (`formatLinksMessage` / links de carro).
 
 ## Preço e links — VOOS (regra dura)
 
@@ -27,7 +28,8 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 
 ## Preço e links — CARRO
 
-- Watch padrão Natal/Ano Novo: **Aeroporto REC**, retirada **2026-12-23 14:00**, devolução **2027-01-01 12:00**, categoria **economy**, teto total padrão **R$1.800** (ajustável).
+- Watches padrão Natal/Ano Novo (os dois ativos): **REC** e **AJU**, retirada **2026-12-23 14:00**, devolução **2027-01-01 12:00**, categoria **economy**, teto total padrão **R$1.800** (ajustável).
+- Pediu “análise / comparativo” de carro → use `show-car-compare` com REC+AJU (não só uma cidade).
 - `maxPrice` do carro = **TOTAL da locação** (não por dia). Margem **15%**.
 - Sem API de preço de carro no token atual: entregue **links ao vivo** (Kayak, Rentcars, Skyscanner, Booking, Localiza, Movida, Unidas, Foco). Estimativa só como faixa.
 - Se o usuário informar um valor visto no site, grave com `upsert-car-watch` (`lastSeenPrice` + `lastSeenSource`) e rode `run-car-price-watch` se quiser alertar.
@@ -44,7 +46,8 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 
 ## O que mostrar — carro
 
-- Só o `chatMarkdown` de `show-car-deals-board` (totais, faixa, links)
+- Uma cidade: `chatMarkdown` de `show-car-deals-board`
+- REC vs AJU (ou lista): `chatMarkdown` de `show-car-compare`
 
 ## Não mostrar
 
@@ -59,7 +62,7 @@ Se `mode` do carro for `estimate`, uma linha: “estimativa — abra os links”
 
 Voos: `upsert-watch` · `list-watches` · `show-deals-board` (padrão) · `search-prices` · `build-buy-links` · `run-price-watch` · `notify-whatsapp`
 
-Carro: `upsert-car-watch` · `list-car-watches` · `show-car-deals-board` · `run-car-price-watch`
+Carro: `upsert-car-watch` · `list-car-watches` · `show-car-deals-board` · `show-car-compare` · `run-car-price-watch`
 
 ## Memory
 

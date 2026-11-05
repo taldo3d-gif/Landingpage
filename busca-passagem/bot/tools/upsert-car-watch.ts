@@ -18,7 +18,7 @@ function defaultLabel(iata: string): string {
     case "MCZ":
       return "Aeroporto de Maceió (MCZ)";
     case "AJU":
-      return "Aeroporto de Aracaju (AJU)";
+      return "Aeroporto de Aracaju (AJU / Santa Maria)";
     default:
       return `Aeroporto ${iata.toUpperCase()}`;
   }
