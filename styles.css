@@ -860,6 +860,10 @@ h3 {
   object-fit: cover;
 }
 
+.product-shot img.is-clock {
+  object-position: 78% 30%;
+}
+
 .product-shot .info {
   padding: 18px;
 }
