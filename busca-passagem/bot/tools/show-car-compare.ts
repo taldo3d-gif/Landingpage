@@ -173,7 +173,7 @@ export default defineTool({
     }
     parts.push(
       "",
-      "Como escolher: 1) Localiza com datas preenchidas (grupo SUV/GX)  2) Foco/Movida  3) Kayak pra cruzar preço.",
+      "Como abrir: 1) Kayak/Momondo (já cai nos resultados do aeroporto)  2) Localiza/Foco (form preenchido → Continuar)  3) Movida.",
       "",
       "— Detalhe por cidade —",
       "",

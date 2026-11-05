@@ -20,77 +20,60 @@ function yymmdd(isoDate: string): string {
   return `${y?.slice(2) ?? ""}${m ?? ""}${d ?? ""}`;
 }
 
-/** Kayak city slug for common BR airport pickups. */
-function kayakCitySlug(iata: string): string {
-  switch (iata.toUpperCase()) {
-    case "REC":
-      return "Recife,Brasil-c15630";
-    case "MCZ":
-      return "Maceio,Brasil-c31221";
-    case "AJU":
-      return "Aracaju,Brasil-c42895";
-    case "GRU":
-    case "CGH":
-    case "SAO":
-      return "Sao-Paulo,Brasil-c29856";
-    default:
-      return `${iata.toUpperCase()}`;
-  }
-}
-
 type AirportMeta = {
   placeName: string;
-  expediaLocn: string;
+  /** Kayak/Momondo airport car search uses bare IATA in /cars/{IATA}/dates */
+  iata: string;
   rentcarsPath: string | null;
-  discoverPath: string;
   skyscannerSlug: string;
-  /** Localiza agency code (e.g. AAREC) for reservation deep links. */
   localizaAgencyCode: string | null;
-  focoPath: string;
+  movidaStorePath: string | null;
+  focoReservaHint: string | null;
 };
 
-function airportMeta(iata: string): AirportMeta {
-  switch (iata.toUpperCase()) {
+function airportMeta(iataRaw: string): AirportMeta {
+  const iata = iataRaw.toUpperCase();
+  switch (iata) {
     case "REC":
       return {
         placeName: "Aeroporto de Recife",
-        expediaLocn: "Recife, Brazil (REC-Guararapes Intl.)",
+        iata: "REC",
         rentcarsPath:
           "aeroportos/brasil/rec-guararapes-gilberto-freyre-recife-pernambuco",
-        discoverPath: "brazil/recife",
-        skyscannerSlug: "recife/recife",
+        skyscannerSlug: "rec/rec",
         localizaAgencyCode: "AAREC",
-        focoPath: "rede-de-lojas",
-      };
-    case "AJU":
-      return {
-        placeName: "Aeroporto de Aracaju",
-        expediaLocn: "Aracaju, Brazil (AJU-Santa Maria)",
-        rentcarsPath: "aeroportos/brasil/aju-santa-maria-aracaju-sergipe",
-        discoverPath: "brazil/aracaju",
-        skyscannerSlug: "aracaju/aracaju",
-        localizaAgencyCode: "AAAJU",
-        focoPath: "",
+        movidaStorePath: "loja/recife-aeroporto",
+        focoReservaHint: "Recife Aeroporto",
       };
     case "MCZ":
       return {
         placeName: "Aeroporto de Maceió",
-        expediaLocn: "Maceio, Brazil (MCZ-Zumbi dos Palmares)",
+        iata: "MCZ",
         rentcarsPath: "aeroportos/brasil/mcz-zumbi-dos-palmares-maceio-alagoas",
-        discoverPath: "brazil/maceio",
-        skyscannerSlug: "maceio/maceio",
+        skyscannerSlug: "mcz/mcz",
         localizaAgencyCode: "AAMCZ",
-        focoPath: "rede-de-lojas/aluguel-carro-aeroporto-maceio-mcz",
+        movidaStorePath: "loja/maceio-aeroporto",
+        focoReservaHint: "Maceió Aeroporto",
+      };
+    case "AJU":
+      return {
+        placeName: "Aeroporto de Aracaju",
+        iata: "AJU",
+        rentcarsPath: "aeroportos/brasil/aju-santa-maria-aracaju-sergipe",
+        skyscannerSlug: "aju/aju",
+        localizaAgencyCode: "AAAJU",
+        movidaStorePath: null,
+        focoReservaHint: "Aracaju Aeroporto",
       };
     default:
       return {
-        placeName: iata.toUpperCase(),
-        expediaLocn: iata.toUpperCase(),
+        placeName: iata,
+        iata,
         rentcarsPath: null,
-        discoverPath: "brazil",
-        skyscannerSlug: "",
+        skyscannerSlug: `${iata.toLowerCase()}/${iata.toLowerCase()}`,
         localizaAgencyCode: null,
-        focoPath: "",
+        movidaStorePath: null,
+        focoReservaHint: null,
       };
   }
 }
@@ -103,7 +86,7 @@ function localizaDateTime(isoDate: string, hhmm: string): string {
 
 /**
  * Deep link into Localiza booking form with airport + dates prefilled.
- * Agency codes from Localiza API (AAREC, AAAJU, AAMCZ…).
+ * Site still needs "Continuar" — prefills passo 1, does not skip to groups.
  */
 export function buildLocalizaSearchUrl(input: {
   agencyCode: string;
@@ -136,9 +119,15 @@ function categoryHint(category: CarCategory): string {
   }
 }
 
+function kayakCarFs(category: CarCategory): string {
+  if (category === "economy" || category === "compact") return "carclass=small";
+  if (category === "suv") return "carclass=suv";
+  return "";
+}
+
 /**
- * Deep links for Recife (and other BR airport) car rentals on fixed dates.
- * Comparators first, then major BR fleets.
+ * Deep links that preferably land on RESULTS with dates (Kayak/Momondo IATA),
+ * then fleet sites (often need one click Continuar).
  */
 export function buildCarBuyLinks(input: {
   pickupIata: string;
@@ -149,17 +138,25 @@ export function buildCarBuyLinks(input: {
   category?: CarCategory;
   driverAge?: number;
 }): CarBuyLinks {
-  const iata = input.pickupIata.toUpperCase();
-  const meta = airportMeta(iata);
+  const meta = airportMeta(input.pickupIata);
   const pickupTime = padTime(input.pickupTime ?? "14:00");
   const dropoffTime = padTime(input.dropoffTime ?? "12:00");
   const pickupHour = timeHour(pickupTime);
   const dropoffHour = timeHour(dropoffTime);
   const age = Math.max(18, Math.min(99, input.driverAge ?? 25));
-  const category = input.category ?? "economy";
-  const city = kayakCitySlug(iata);
+  const category = input.category ?? "suv";
+  const fs = kayakCarFs(category);
 
-  const kayak = `https://www.kayak.com.br/cars/${city}/${input.pickupDate}-${pickupHour}h/${input.dropoffDate}-${dropoffHour}h?sort=price_a`;
+  // Airport IATA in path → Kayak/Momondo open search results for those dates
+  // (city slug Recife,Brasil-c… often dumped users on a blank search).
+  const kayakPath = `${meta.iata}/${input.pickupDate}-${pickupHour}h/${input.dropoffDate}-${dropoffHour}h`;
+  // Keep fs=carclass=suv unescaped — Kayak car filters break if '=' is %3D-encoded.
+  const kayak =
+    `https://www.kayak.com.br/cars/${kayakPath}?sort=price_a` +
+    (fs ? `&fs=${fs}` : "");
+  const momondo =
+    `https://www.momondo.com.br/cars/${kayakPath}?sort=price_a` +
+    (fs ? `&fs=${fs}` : "");
 
   const rentcarsParams = new URLSearchParams({
     pickupLocation: meta.placeName,
@@ -172,25 +169,26 @@ export function buildCarBuyLinks(input: {
     ? `https://www.rentcars.com/pt-br/${meta.rentcarsPath}?${rentcarsParams.toString()}`
     : `https://www.rentcars.com/pt-br/?${rentcarsParams.toString()}`;
 
-  const booking = `https://www.booking.com/cars/airport/br/${iata.toLowerCase()}.pt-br.html`;
+  // Booking airport cars landing (user fills dates on SPA — keep airport locked)
+  const booking = `https://www.booking.com/cars/airport/br/${meta.iata.toLowerCase()}.pt-br.html`;
 
+  // Expedia Cars-Search — ISO dates + 24h times
   const expedia = `https://www.expedia.com.br/Cars-Search?${new URLSearchParams(
     {
       date1: input.pickupDate,
       date2: input.dropoffDate,
-      locn: meta.expediaLocn,
-      time1: `${pickupHour}00AM`,
-      time2: `${dropoffHour}00AM`,
+      locn: `${meta.placeName} (${meta.iata})`,
+      time1: `${pickupHour}00`,
+      time2: `${dropoffHour}00`,
     },
   ).toString()}`;
 
-  const discoverCars = `https://www.discovercars.com/br/${meta.discoverPath}?date_from=${input.pickupDate}&date_to=${input.dropoffDate}`;
+  const discoverCars = `https://www.discovercars.com/br/brazil?date_from=${input.pickupDate}&date_to=${input.dropoffDate}&time_from=${pickupTime}&time_to=${dropoffTime}`;
 
+  // Skyscanner carhire results path (dates YYMMDD)
   const skyPick = yymmdd(input.pickupDate);
   const skyDrop = yymmdd(input.dropoffDate);
-  const skyscanner = meta.skyscannerSlug
-    ? `https://www.skyscanner.com.br/aluguel-de-carros/${meta.skyscannerSlug}/${skyPick}/${skyDrop}/?pickuptime=${pickupTime}&dropofftime=${dropoffTime}&driversage=${age}`
-    : `https://www.skyscanner.com.br/aluguel-de-carros/?pickupplace=${iata}&pickupdate=${skyPick}&dropoffdate=${skyDrop}`;
+  const skyscanner = `https://www.skyscanner.com.br/carhire/results/${meta.iata}/${meta.iata}/${skyPick}/${skyDrop}/${pickupTime}/${dropoffTime}/${age}/`;
 
   const localiza = meta.localizaAgencyCode
     ? buildLocalizaSearchUrl({
@@ -202,12 +200,6 @@ export function buildCarBuyLinks(input: {
       })
     : "https://www.localiza.com/brasil/pt-br";
 
-  const movidaStore =
-    iata === "REC"
-      ? "https://www.movida.com.br/loja/recife-aeroporto"
-      : iata === "MCZ"
-        ? "https://www.movida.com.br/loja/maceio-aeroporto"
-        : "https://www.movida.com.br/";
   const movidaQ = new URLSearchParams({
     localRetirada: meta.placeName,
     dataRetirada: ddmmyyyy(input.pickupDate),
@@ -215,31 +207,30 @@ export function buildCarBuyLinks(input: {
     horaRetirada: pickupTime,
     horaDevolucao: dropoffTime,
   });
-  // Store page + query hints (SPA); query helps when homepage form picks them up.
-  const movida = `${movidaStore}?${movidaQ.toString()}`;
+  const movida = meta.movidaStorePath
+    ? `https://www.movida.com.br/${meta.movidaStorePath}?${movidaQ.toString()}`
+    : `https://aluguel.movida.com.br/?${movidaQ.toString()}`;
+
+  // Foco booking engine — query hints; SPA may still ask to confirm store
+  const focoQ = new URLSearchParams({
+    retirada: meta.focoReservaHint ?? meta.placeName,
+    dataRetirada: input.pickupDate,
+    dataDevolucao: input.dropoffDate,
+    horaRetirada: pickupTime,
+    horaDevolucao: dropoffTime,
+  });
+  const foco = `https://reservas.aluguefoco.com.br/?${focoQ.toString()}`;
 
   const unidas = "https://www.unidas.com.br/";
-  const foco = meta.focoPath
-    ? meta.focoPath.startsWith("rede-de-lojas")
-      ? `https://www.aluguefoco.com.br/${meta.focoPath}`
-      : `https://www.focoalugueldecarros.com.br/${meta.focoPath}`
-    : "https://www.aluguefoco.com.br/rede-de-lojas";
-
-  // Prefer economy/compact sorts on Kayak when asked; SUV for T-Cross class.
-  const kayakWithClass =
-    category === "economy" || category === "compact"
-      ? `${kayak}&fs=carclass=small`
-      : category === "suv"
-        ? `${kayak}&fs=carclass=suv`
-        : kayak;
 
   return {
-    kayak: kayakWithClass,
+    kayak,
+    momondo,
+    skyscanner,
     rentcars,
     booking,
     expedia,
     discoverCars,
-    skyscanner,
     localiza,
     movida,
     unidas,
@@ -253,17 +244,20 @@ export function formatCarLinksMessage(
 ): string {
   const hint = category ? ` (${categoryHint(category)})` : "";
   return [
-    `Reservar nas locadoras${hint} (melhor caminho pro T-Cross/SUV):`,
-    `Localiza (datas preenchidas): ${links.localiza}`,
-    `Movida (loja aeroporto): ${links.movida}`,
-    `Foco: ${links.foco}`,
-    `Unidas: ${links.unidas}`,
-    "",
-    `Comparar preço${hint}:`,
-    `Kayak SUV: ${links.kayak}`,
-    `Rentcars: ${links.rentcars}`,
+    `1) Abrir RESULTADOS já com datas${hint} — use estes primeiro:`,
+    `Kayak aeroporto: ${links.kayak}`,
+    `Momondo aeroporto: ${links.momondo}`,
     `Skyscanner: ${links.skyscanner}`,
-    `Booking Cars: ${links.booking}`,
+    "",
+    `2) Locadoras (form costuma vir preenchido; se pedir, clique Continuar/Buscar):`,
+    `Localiza: ${links.localiza}`,
+    `Foco reservas: ${links.foco}`,
+    `Movida: ${links.movida}`,
+    `Unidas (site; buscar manualmente): ${links.unidas}`,
+    "",
+    `3) Outros comparadores:`,
+    `Rentcars: ${links.rentcars}`,
+    `Expedia: ${links.expedia}`,
   ].join("\n");
 }
 

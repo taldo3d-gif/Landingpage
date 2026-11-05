@@ -126,12 +126,15 @@ export type CarWatch = {
 
 /** Cash-only BR car rental comparison / booking deep links. */
 export type CarBuyLinks = {
+  /** Prefer: lands on dated airport results. */
   kayak: string;
+  momondo: string;
+  skyscanner: string;
   rentcars: string;
   booking: string;
   expedia: string;
   discoverCars: string;
-  skyscanner: string;
+  /** Fleet sites — often prefill form; may need Continuar. */
   localiza: string;
   movida: string;
   unidas: string;

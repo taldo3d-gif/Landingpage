@@ -31,7 +31,7 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 - Watches padrão Natal/Ano Novo (ativos): **REC** e **MCZ** (Maceió) — **não AJU**. Retirada **2026-12-23 14:00**, devolução **2027-01-01 12:00**, categoria **suv** (alvo **T-Cross**), teto **R$170/dia** (~R$1.530 / 9 dias). Margem **15%**.
 - Pediu “análise / comparativo” de carro → `show-car-compare` com REC+MCZ (inclui diretório de lojas).
 - Prefira `maxPricePerDay` (170); `maxPrice` = total. Promo ≤ R$170/dia = alerta.
-- Sem API de preço de carro: links ao vivo. Prioridade: **Localiza (deep link com datas)** → Foco/Movida → Kayak SUV.
+- Sem API de preço de carro: links ao vivo. Prioridade de abertura: **Kayak/Momondo aeroporto (IATA + datas = resultados)** → Skyscanner → Localiza/Foco (form preenchido; clique Continuar se pedir) → Movida/Unidas.
 - Lojas aeroporto: REC = Localiza, Movida, Unidas, Foco (várias na Av. Mascarenhas, fora do terminal). MCZ = Localiza/Movida/Unidas no térreo + Foco com transfer.
 - Se o usuário informar valor visto, grave `lastSeenPrice` + `lastSeenSource`.
 - Confirme proteção/CDW, km livre, condutor extra e taxa aeroporto — uma linha no máximo.
