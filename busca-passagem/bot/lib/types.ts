@@ -72,3 +72,74 @@ export type PriceQuote = {
   /** Trusted buy links for THIS flight date (not a generic search). */
   buy: BuyLinks;
 };
+
+/** Car category filter for rental watches. */
+export type CarCategory =
+  | "economy"
+  | "compact"
+  | "intermediate"
+  | "suv"
+  | "any";
+
+/**
+ * Car rental price watch (pickup/dropoff + total ceiling).
+ * maxPrice = total for the whole rental (not per day).
+ */
+export type CarWatch = {
+  id: string;
+  /** IATA when airport pickup (e.g. REC). */
+  pickupIata: string;
+  pickupLabel: string;
+  dropoffIata: string;
+  dropoffLabel: string;
+  pickupDate: string;
+  dropoffDate: string;
+  /** Local HH:mm */
+  pickupTime: string;
+  /** Local HH:mm */
+  dropoffTime: string;
+  category: CarCategory;
+  /** Ceiling for the FULL rental period (BRL total). */
+  maxPrice: number;
+  /** Allow up to maxPrice * (1 + marginPct/100). Default 15. */
+  marginPct: number;
+  currency: string;
+  /** Minimum driver age for deep links (default 25). */
+  driverAge: number;
+  active: boolean;
+  notes: string | null;
+  /**
+   * Last total price the user/agent saw live on a comparator (BRL).
+   * Used to alert when ≤ ceiling until a lower price is recorded.
+   */
+  lastSeenPrice: number | null;
+  lastSeenAt: string | null;
+  lastSeenSource: string | null;
+  updatedAt: string;
+};
+
+/** Cash-only BR car rental comparison / booking deep links. */
+export type CarBuyLinks = {
+  kayak: string;
+  rentcars: string;
+  booking: string;
+  expedia: string;
+  discoverCars: string;
+  skyscanner: string;
+  localiza: string;
+  movida: string;
+  unidas: string;
+  foco: string;
+};
+
+export type CarQuote = {
+  /** Total for the rental period. */
+  price: number;
+  /** Approximate per-day (total / days). */
+  pricePerDay: number;
+  currency: string;
+  category: CarCategory;
+  supplier: string | null;
+  source: "recorded" | "estimate";
+  buy: CarBuyLinks;
+};
