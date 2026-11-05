@@ -44,7 +44,8 @@ type AirportMeta = {
   rentcarsPath: string | null;
   discoverPath: string;
   skyscannerSlug: string;
-  localizaPath: string;
+  /** Localiza agency code (e.g. AAREC) for reservation deep links. */
+  localizaAgencyCode: string | null;
   focoPath: string;
 };
 
@@ -58,7 +59,7 @@ function airportMeta(iata: string): AirportMeta {
           "aeroportos/brasil/rec-guararapes-gilberto-freyre-recife-pernambuco",
         discoverPath: "brazil/recife",
         skyscannerSlug: "recife/recife",
-        localizaPath: "rede-de-agencias/aeroporto-de-recife",
+        localizaAgencyCode: "AAREC",
         focoPath: "lojas/aeroporto-internacional-do-recife/",
       };
     case "AJU":
@@ -68,7 +69,7 @@ function airportMeta(iata: string): AirportMeta {
         rentcarsPath: "aeroportos/brasil/aju-santa-maria-aracaju-sergipe",
         discoverPath: "brazil/aracaju",
         skyscannerSlug: "aracaju/aracaju",
-        localizaPath: "rede-de-agencias/aeroporto-santa-maria",
+        localizaAgencyCode: "AAAJU",
         focoPath: "",
       };
     case "MCZ":
@@ -78,7 +79,7 @@ function airportMeta(iata: string): AirportMeta {
         rentcarsPath: "aeroportos/brasil/mcz-zumbi-dos-palmares-maceio-alagoas",
         discoverPath: "brazil/maceio",
         skyscannerSlug: "maceio/maceio",
-        localizaPath: "rede-de-agencias/aeroporto-de-maceio",
+        localizaAgencyCode: "AAMCZ",
         focoPath: "",
       };
     default:
@@ -88,10 +89,36 @@ function airportMeta(iata: string): AirportMeta {
         rentcarsPath: null,
         discoverPath: "brazil",
         skyscannerSlug: "",
-        localizaPath: "",
+        localizaAgencyCode: null,
         focoPath: "",
       };
   }
+}
+
+/** Localiza SPA expects DD-MM-YYYY HH:mm:ss in query params. */
+function localizaDateTime(isoDate: string, hhmm: string): string {
+  const [y, m, d] = isoDate.split("-");
+  return `${d}-${m}-${y} ${padTime(hhmm)}:00`;
+}
+
+/**
+ * Deep link into Localiza booking form with airport + dates prefilled.
+ * Agency codes from Localiza API (AAREC, AAAJU, AAMCZ…).
+ */
+export function buildLocalizaSearchUrl(input: {
+  agencyCode: string;
+  pickupDate: string;
+  dropoffDate: string;
+  pickupTime: string;
+  dropoffTime: string;
+}): string {
+  const params = new URLSearchParams({
+    pickUpLocation: input.agencyCode,
+    pickUpDateTime: localizaDateTime(input.pickupDate, input.pickupTime),
+    dropOffLocation: input.agencyCode,
+    dropOffDateTime: localizaDateTime(input.dropoffDate, input.dropoffTime),
+  });
+  return `https://www.localiza.com/brasil/pt-br?${params.toString()}`;
 }
 
 function categoryHint(category: CarCategory): string {
@@ -165,8 +192,14 @@ export function buildCarBuyLinks(input: {
     ? `https://www.skyscanner.com.br/aluguel-de-carros/${meta.skyscannerSlug}/${skyPick}/${skyDrop}/?pickuptime=${pickupTime}&dropofftime=${dropoffTime}&driversage=${age}`
     : `https://www.skyscanner.com.br/aluguel-de-carros/?pickupplace=${iata}&pickupdate=${skyPick}&dropoffdate=${skyDrop}`;
 
-  const localiza = meta.localizaPath
-    ? `https://www.localiza.com/brasil/pt-br/${meta.localizaPath}`
+  const localiza = meta.localizaAgencyCode
+    ? buildLocalizaSearchUrl({
+        agencyCode: meta.localizaAgencyCode,
+        pickupDate: input.pickupDate,
+        dropoffDate: input.dropoffDate,
+        pickupTime,
+        dropoffTime,
+      })
     : "https://www.localiza.com/brasil/pt-br";
 
   const movidaQ = new URLSearchParams({
