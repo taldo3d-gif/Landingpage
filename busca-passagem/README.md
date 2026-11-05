@@ -36,6 +36,6 @@ Schedule: `car-price-watch` (a cada 6h; digest WhatsApp 1×/dia).
 - `maxPrice` = **total** da locação (BRL), não por dia.
 - Sem API de preço de carro no token: board entrega **links ao vivo** + faixa estimada.
 - Grave um valor visto com `lastSeenPrice` no `upsert-car-watch` para alertar abaixo do teto.
-- Comparativo REC vs MCZ: `show-car-compare` (padrão `iatas: ["REC","MCZ"]`) + diretório de lojas.
+- Comparativo REC vs MCZ: `show-car-compare` — SUV/T-Cross (R$170/dia) **e** hatch Polo/HB20 (R$120/dia) + lojas.
 
 Watches Natal/Ano Novo: **REC** e **MCZ**, retirada `2026-12-23 14:00`, devolução `2027-01-01 12:00`, **SUV / T-Cross**, teto **R$170/dia** (~R$1.530 total).

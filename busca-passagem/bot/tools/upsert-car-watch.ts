@@ -27,7 +27,7 @@ function defaultLabel(iata: string): string {
 
 export default defineTool({
   description:
-    "Create/update a CAR rental watch. Prefer maxPricePerDay (e.g. 170 for T-Cross/SUV). maxPrice = TOTAL for the rental (auto = days × maxPricePerDay). Use lastSeenPrice for live totals.",
+    "Create/update a CAR rental watch. Prefer maxPricePerDay: 170 for T-Cross/SUV, 120 for Polo/HB20 Hatch (category compact). maxPrice = TOTAL (auto = days × maxPricePerDay). Use lastSeenPrice for live totals.",
   effect: "idempotent",
   inputSchema: z.object({
     id: z.string().optional(),
@@ -44,7 +44,7 @@ export default defineTool({
       .string()
       .nullable()
       .optional()
-      .describe('e.g. "T-Cross" / SUV compacto'),
+      .describe('e.g. "T-Cross" or "Polo / HB20 Hatch"'),
     maxPrice: z
       .number()
       .positive()

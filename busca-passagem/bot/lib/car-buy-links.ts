@@ -107,19 +107,20 @@ export function buildLocalizaSearchUrl(input: {
 function categoryHint(category: CarCategory): string {
   switch (category) {
     case "economy":
-      return "econômico";
+      return "econômico / hatch";
     case "compact":
-      return "compacto";
+      return "compacto · Polo / HB20 Hatch";
     case "intermediate":
       return "intermediário";
     case "suv":
-      return "SUV";
+      return "SUV · T-Cross";
     default:
       return "qualquer categoria";
   }
 }
 
 function kayakCarFs(category: CarCategory): string {
+  // Polo / HB20 Hatch sit in Kayak "small"; T-Cross in "suv".
   if (category === "economy" || category === "compact") return "carclass=small";
   if (category === "suv") return "carclass=suv";
   return "";

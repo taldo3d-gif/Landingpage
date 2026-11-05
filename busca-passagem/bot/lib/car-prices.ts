@@ -171,8 +171,8 @@ export function searchCarPrices(input: {
 
   const note =
     mode === "recorded"
-      ? "Há preço registrado pelo usuário/agente; abra os links para confirmar ao vivo (promo T-Cross/SUV se aparecer)."
-      : "Sem API de preço ao vivo — abra Kayak/Momondo primeiro (resultados com datas). Locadoras podem pedir Continuar. Estimativa só como faixa.";
+      ? "Há preço registrado; confirme ao vivo (SUV/T-Cross ou hatch Polo/HB20 conforme o watch)."
+      : "Sem API de preço ao vivo — abra Kayak/Momondo (filtro SUV ou pequeno/hatch). Locadoras podem pedir Continuar. Estimativa só como faixa.";
 
   const chatMarkdown = [
     `🚗 ${place} · ${input.pickupDate} ${input.pickupTime ?? "14:00"}` +

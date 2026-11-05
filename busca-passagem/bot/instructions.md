@@ -28,9 +28,12 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 
 ## Preço e links — CARRO
 
-- Watches padrão Natal/Ano Novo (ativos): **REC** e **MCZ** (Maceió) — **não AJU**. Retirada **2026-12-23 14:00**, devolução **2027-01-01 12:00**, categoria **suv** (alvo **T-Cross**), teto **R$170/dia** (~R$1.530 / 9 dias). Margem **15%**.
-- Pediu “análise / comparativo” de carro → `show-car-compare` com REC+MCZ (inclui diretório de lojas).
-- Prefira `maxPricePerDay` (170); `maxPrice` = total. Promo ≤ R$170/dia = alerta.
+- Watches padrão Natal/Ano Novo (ativos): **REC** e **MCZ** — **não AJU**. Retirada **2026-12-23 14:00**, devolução **2027-01-01 12:00**.
+  - **SUV / T-Cross** · teto **R$170/dia** (~R$1.530 / 9 dias)
+  - **Hatch compacto · Polo / HB20 Hatch** · teto **R$120/dia** (~R$1.080 / 9 dias)
+  - Margem **15%**. `ensureDefaultCarWatches` cria os 4 ids se faltarem.
+- Pediu “análise / comparativo / atualiza” de carro → `show-car-compare` (mostra **os dois grupos** em REC+MCZ).
+- Prefira `maxPricePerDay` (170 SUV / 120 hatch); `maxPrice` = total. Promo ≤ teto/dia = alerta.
 - Sem API de preço de carro: links ao vivo. Prioridade de abertura: **Kayak/Momondo aeroporto (IATA + datas = resultados)** → Skyscanner → Localiza/Foco (form preenchido; clique Continuar se pedir) → Movida/Unidas.
 - Lojas aeroporto: REC = Localiza, Movida, Unidas, Foco (várias na Av. Mascarenhas, fora do terminal). MCZ = Localiza/Movida/Unidas no térreo + Foco com transfer.
 - Se o usuário informar valor visto, grave `lastSeenPrice` + `lastSeenSource`.

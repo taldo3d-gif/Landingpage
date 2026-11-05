@@ -1,3 +1,4 @@
+import { rentalDayCount } from "./car-buy-links.js";
 import { CAR_WATCH_INDEX_KEY, carWatchKey } from "./kv-keys.js";
 import type { CarCategory, CarWatch } from "./types.js";
 
@@ -6,6 +7,117 @@ type Kv = {
   put(key: string, value: unknown): Promise<void>;
   delete(key: string): Promise<void>;
 };
+
+/** Natal/Ano Novo trip — shared pickup window for car watches. */
+export const DEFAULT_CAR_TRIP = {
+  pickupDate: "2026-12-23",
+  dropoffDate: "2027-01-01",
+  pickupTime: "14:00",
+  dropoffTime: "12:00",
+} as const;
+
+function defaultAirportLabel(iata: string): string {
+  switch (iata.toUpperCase()) {
+    case "REC":
+      return "Aeroporto de Recife (REC / Guararapes)";
+    case "MCZ":
+      return "Aeroporto de Maceió (MCZ / Zumbi dos Palmares)";
+    case "AJU":
+      return "Aeroporto de Aracaju (AJU / Santa Maria)";
+    default:
+      return `Aeroporto ${iata.toUpperCase()}`;
+  }
+}
+
+/**
+ * Ensure REC/MCZ watches exist for SUV (T-Cross) and hatch (Polo / HB20).
+ * Idempotent — creates missing ids only; does not overwrite lastSeen*.
+ */
+export async function ensureDefaultCarWatches(kv: Kv): Promise<CarWatch[]> {
+  const days = rentalDayCount(
+    DEFAULT_CAR_TRIP.pickupDate,
+    DEFAULT_CAR_TRIP.dropoffDate,
+  );
+  const now = new Date().toISOString();
+  const templates: Array<{
+    id: string;
+    iata: string;
+    category: CarCategory;
+    modelHint: string;
+    maxPricePerDay: number;
+    notes: string;
+  }> = [
+    {
+      id: "car-rec-tcross-170",
+      iata: "REC",
+      category: "suv",
+      modelHint: "T-Cross",
+      maxPricePerDay: 170,
+      notes: "SUV compacto tipo T-Cross · teto R$170/dia",
+    },
+    {
+      id: "car-mcz-tcross-170",
+      iata: "MCZ",
+      category: "suv",
+      modelHint: "T-Cross",
+      maxPricePerDay: 170,
+      notes: "SUV compacto tipo T-Cross · teto R$170/dia",
+    },
+    {
+      id: "car-rec-hatch-120",
+      iata: "REC",
+      category: "compact",
+      modelHint: "Polo / HB20 Hatch",
+      maxPricePerDay: 120,
+      notes: "Grupo hatch compacto (Polo, HB20 Hatch ou similar) · teto R$120/dia",
+    },
+    {
+      id: "car-mcz-hatch-120",
+      iata: "MCZ",
+      category: "compact",
+      modelHint: "Polo / HB20 Hatch",
+      maxPricePerDay: 120,
+      notes: "Grupo hatch compacto (Polo, HB20 Hatch ou similar) · teto R$120/dia",
+    },
+  ];
+
+  const ensured: CarWatch[] = [];
+  for (const t of templates) {
+    const existing = await getCarWatch(kv, t.id);
+    if (existing) {
+      ensured.push(existing);
+      continue;
+    }
+    const label = defaultAirportLabel(t.iata);
+    const watch: CarWatch = {
+      id: t.id,
+      pickupIata: t.iata,
+      pickupLabel: label,
+      dropoffIata: t.iata,
+      dropoffLabel: label,
+      pickupDate: DEFAULT_CAR_TRIP.pickupDate,
+      dropoffDate: DEFAULT_CAR_TRIP.dropoffDate,
+      pickupTime: DEFAULT_CAR_TRIP.pickupTime,
+      dropoffTime: DEFAULT_CAR_TRIP.dropoffTime,
+      category: t.category,
+      modelHint: t.modelHint,
+      maxPricePerDay: t.maxPricePerDay,
+      maxPrice: Math.round(t.maxPricePerDay * days),
+      marginPct: 15,
+      currency: "BRL",
+      driverAge: 25,
+      active: true,
+      notes: t.notes,
+      lastSeenPrice: null,
+      lastSeenAt: null,
+      lastSeenSource: null,
+      updatedAt: now,
+    };
+    await putCarWatch(kv, watch);
+    ensured.push(watch);
+  }
+  return ensured;
+}
 
 const CATEGORIES = new Set<CarCategory>([
   "economy",

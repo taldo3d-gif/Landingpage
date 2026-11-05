@@ -6,7 +6,10 @@ import {
   effectiveCarCeiling,
   searchCarPrices,
 } from "../lib/car-prices.js";
-import { listCarWatches } from "../lib/car-watches.js";
+import {
+  ensureDefaultCarWatches,
+  listCarWatches,
+} from "../lib/car-watches.js";
 import { defaultWhatsAppTo, sendWhatsAppText } from "../lib/evolution.js";
 import {
   carAlertDedupeKey,
@@ -33,6 +36,7 @@ export default defineTool({
   }),
   dryRunResult: () => ({ dryRun: true, alertCount: 0 }),
   async execute({ forceNotify, dryNotify }, ctx) {
+    await ensureDefaultCarWatches(ctx.host.kv);
     const watches = (await listCarWatches(ctx.host.kv)).filter((w) => w.active);
     const alerts: Array<{
       watchId: string;
