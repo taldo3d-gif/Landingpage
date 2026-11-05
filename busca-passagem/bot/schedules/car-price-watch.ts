@@ -1,8 +1,8 @@
 import { defineSchedule } from "@grok/agent-sdk/schedules";
 
 export default defineSchedule({
-  // Every 6 hours UTC — daily digest is deduped inside the tool
-  cron: "0 */6 * * *",
+  // Every 2 hours — under-ceiling alerts fire immediately inside the tool
+  cron: "0 */2 * * *",
   async run({ callTool, waitUntil }) {
     waitUntil(
       callTool("run-car-price-watch", {}).then((result) => {

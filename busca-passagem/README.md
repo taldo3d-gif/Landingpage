@@ -31,7 +31,7 @@ Sem `TRAVELPAYOUTS_TOKEN` → **mock**. Com token → cache Aviasales real.
 ## Aluguel de carro
 
 Tools: `upsert-car-watch`, `list-car-watches`, `show-car-deals-board`, `show-car-compare`, `run-car-price-watch`.  
-Schedule: `car-price-watch` (a cada 6h; digest WhatsApp 1×/dia).
+Schedule: `car-price-watch` (a cada 2h; alerta WhatsApp na hora se preço ≤ teto).
 
 - `maxPrice` = **total** da locação (BRL), não por dia.
 - Sem API de preço de carro no token: board entrega **links ao vivo** + faixa estimada.
