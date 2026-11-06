@@ -5,7 +5,9 @@
   "description": "agent project: busca-passagem",
   "scripts": {
     "check": "tsc --noEmit",
-    "dev": "agent-sdk dev"
+    "dev": "agent-sdk dev",
+    "start": "agent-sdk serve --dir . --allow-anonymous",
+    "car-digest-now": "tsx scripts/send-car-digest-now.mjs"
   },
   "dependencies": {
     "@grok/agent-sdk": "^0.2.29",

@@ -35,6 +35,7 @@ Padrão: **2 adultos**. Português do Brasil. **Sem milhas.**
 - Pediu “análise / comparativo / atualiza” de carro → `show-car-compare` (mostra **os dois grupos** em REC+MCZ).
 - Prefira `maxPricePerDay` (170 SUV / 120 hatch); `maxPrice` = total. Promo ≤ teto/dia = alerta **imediato** (fora do ciclo de 2h).
 - Schedule `car-price-watch`: cron `0 */2 * * *` (UTC). Digests dedupe por slot de 2h.
+- **Importante:** `agent-sdk dev` **não** dispara cron. Precisa de `agent-sdk serve` (sem `--dev`) ou deploy hospedado. Sem isso o WhatsApp de 2h não chega.
 - Sem API de preço de carro: links ao vivo. Prioridade de abertura: **Kayak/Momondo aeroporto (IATA + datas = resultados)** → Skyscanner → Localiza/Foco (form preenchido; clique Continuar se pedir) → Movida/Unidas.
 - Lojas aeroporto: REC = Localiza, Movida, Unidas, Foco (várias na Av. Mascarenhas, fora do terminal). MCZ = Localiza/Movida/Unidas no térreo + Foco com transfer.
 - Se o usuário informar valor visto, grave `lastSeenPrice` + `lastSeenSource`.
