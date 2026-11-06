@@ -2579,3 +2579,148 @@ h3 {
     align-items: flex-start;
   }
 }
+
+.natal-strip {
+  margin: 26px auto 0;
+  padding: 18px;
+  background: #fff4e4;
+  border: 1px solid #ecd7b8;
+  border-radius: 28px;
+  box-shadow: 0 18px 40px rgba(92, 46, 18, 0.08);
+}
+
+.natal-strip + .product-section {
+  padding-top: 48px;
+}
+
+.natal-row {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.natal-photo {
+  overflow: hidden;
+  height: 124px;
+  border-radius: 20px;
+  background: #f6e3c8;
+}
+
+.natal-photo img {
+  width: 100%;
+  height: auto;
+  transform: translateY(-28.9%);
+}
+
+.natal-copy span {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: #852c3b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.natal-copy h2 {
+  margin: 0;
+  color: #3d1c12;
+  font-size: 28px;
+}
+
+.natal-copy p {
+  margin: 6px 0 0;
+  color: #6b4634;
+}
+
+.natal-actions {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.natal-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: #852c3b;
+  box-shadow: 0 10px 24px rgba(133, 44, 59, 0.22);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.natal-actions small {
+  color: #8a5b45;
+}
+
+.natal-models {
+  margin-top: 14px;
+  border-top: 1px dashed #e2c7a4;
+  padding-top: 12px;
+}
+
+.natal-models summary {
+  cursor: pointer;
+  color: #852c3b;
+  font-weight: 800;
+}
+
+.natal-models figure {
+  margin: 12px 0 0;
+}
+
+.natal-catalog {
+  overflow: hidden;
+  height: min(960px, 90vw);
+  border-radius: 18px;
+}
+
+.natal-catalog img {
+  width: 100%;
+  height: auto;
+  transform: translateY(-18.6%);
+}
+
+@media (max-width: 760px) {
+  .natal-row {
+    grid-template-columns: 132px 1fr;
+  }
+
+  .natal-photo {
+    height: 108px;
+  }
+
+  .natal-copy h2 {
+    font-size: 24px;
+  }
+
+  .natal-actions {
+    grid-column: 1 / -1;
+    justify-items: stretch;
+  }
+
+  .natal-actions .btn {
+    width: 100%;
+  }
+
+  .natal-catalog {
+    height: min(480px, 135vw);
+  }
+}
+
+@media (max-width: 360px) {
+  .natal-row {
+    grid-template-columns: 1fr;
+  }
+
+  .natal-photo {
+    max-width: 140px;
+  }
+}
