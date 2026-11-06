@@ -119,11 +119,17 @@ function categoryHint(category: CarCategory): string {
   }
 }
 
-function kayakCarFs(category: CarCategory): string {
-  // Polo / HB20 Hatch sit in Kayak "small"; T-Cross in "suv".
-  if (category === "economy" || category === "compact") return "carclass=small";
-  if (category === "suv") return "carclass=suv";
-  return "";
+/**
+ * WhatsApp often splits / truncates URLs on bare `&`.
+ * Kayak `/in?url=` + encoded `fs=carclass=…` also lands as `carclass%3D…` and breaks filters.
+ * Path-only links (IATA + dates) are the reliable promo openers.
+ */
+function kayakCarsUrl(path: string): string {
+  return `https://www.kayak.com.br/cars/${path}`;
+}
+
+function momondoCarsUrl(path: string): string {
+  return `https://www.momondo.com.br/cars/${path}`;
 }
 
 /**
@@ -145,19 +151,12 @@ export function buildCarBuyLinks(input: {
   const pickupHour = timeHour(pickupTime);
   const dropoffHour = timeHour(dropoffTime);
   const age = Math.max(18, Math.min(99, input.driverAge ?? 25));
-  const category = input.category ?? "suv";
-  const fs = kayakCarFs(category);
+  // Category filter stays in chat text: path-only URLs survive WhatsApp (no & / commas).
 
-  // Airport IATA in path → Kayak/Momondo open search results for those dates
-  // (city slug Recife,Brasil-c… often dumped users on a blank search).
+  // Airport IATA in path → results for those dates.
   const kayakPath = `${meta.iata}/${input.pickupDate}-${pickupHour}h/${input.dropoffDate}-${dropoffHour}h`;
-  // Keep fs=carclass=suv unescaped — Kayak car filters break if '=' is %3D-encoded.
-  const kayak =
-    `https://www.kayak.com.br/cars/${kayakPath}?sort=price_a` +
-    (fs ? `&fs=${fs}` : "");
-  const momondo =
-    `https://www.momondo.com.br/cars/${kayakPath}?sort=price_a` +
-    (fs ? `&fs=${fs}` : "");
+  const kayak = kayakCarsUrl(kayakPath);
+  const momondo = momondoCarsUrl(kayakPath);
 
   const rentcarsParams = new URLSearchParams({
     pickupLocation: meta.placeName,
@@ -244,21 +243,22 @@ export function formatCarLinksMessage(
   category?: CarCategory,
 ): string {
   const hint = category ? ` (${categoryHint(category)})` : "";
+  const filterTip =
+    category === "suv"
+      ? "No Kayak, filtre a categoria SUV (T-Cross)."
+      : category === "compact" || category === "economy"
+        ? "No Kayak, filtre Pequeno/compacto (Polo / HB20 Hatch)."
+        : "Se o Kayak falhar, use o Momondo.";
   return [
-    `1) Abrir RESULTADOS já com datas${hint} — use estes primeiro:`,
-    `Kayak aeroporto: ${links.kayak}`,
-    `Momondo aeroporto: ${links.momondo}`,
-    `Skyscanner: ${links.skyscanner}`,
+    `1) RESULTADOS com datas${hint} — toque no link (abre direto a busca):`,
+    `Kayak: ${links.kayak}`,
+    `Momondo: ${links.momondo}`,
+    filterTip,
     "",
-    `2) Locadoras (form costuma vir preenchido; se pedir, clique Continuar/Buscar):`,
+    `2) Locadoras (se pedir, Continuar/Buscar):`,
     `Localiza: ${links.localiza}`,
-    `Foco reservas: ${links.foco}`,
+    `Foco: ${links.foco}`,
     `Movida: ${links.movida}`,
-    `Unidas (site; buscar manualmente): ${links.unidas}`,
-    "",
-    `3) Outros comparadores:`,
-    `Rentcars: ${links.rentcars}`,
-    `Expedia: ${links.expedia}`,
   ].join("\n");
 }
 
