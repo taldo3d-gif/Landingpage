@@ -4,12 +4,6 @@
   const DOUBT_BUBBLE_STORAGE_KEY = "taldo-doubt-bubble-dismissed";
   const DOUBT_BUBBLE_DELAY_MS = 5 * 60 * 1000;
   const DOUBT_BUBBLE_TEST_DELAY_MS = 2000;
-  const WHATSAPP_BASE = "https://wa.me/5511910634551?text=";
-  const WHATSAPP_10 =
-    "Olá! Vim pelo site e quero usar meu desconto de 10% na primeira compra.";
-  const WHATSAPP_15 =
-    "Olá! Me cadastrei no site e quero usar meu desconto de 15% (10% + 5%) na primeira compra.";
-
   function getUrlParam(name) {
     try {
       return new URLSearchParams(window.location.search).get(name);
@@ -45,10 +39,6 @@
         transport_type: "beacon",
       });
     }
-  }
-
-  function openWhatsApp(message) {
-    window.open(WHATSAPP_BASE + encodeURIComponent(message), "_blank", "noopener,noreferrer");
   }
 
   async function submitLead(form, options) {
@@ -207,7 +197,7 @@
       skipLink.addEventListener("click", () => {
         markPromoSeen();
         trackEvent("whatsapp_budget_click", {
-          cta_label: "popup-desconto-10-sem-cadastro",
+          cta_label: "popup-desconto-10",
           discount: "10",
         });
       });
@@ -229,24 +219,6 @@
       }
     });
 
-    bindLeadForm(document.getElementById("promo-lead-form"), {
-      statusId: "promo-lead-status",
-      submitId: "promo-lead-submit",
-      source: "popup-desconto-15",
-      requirePhone: true,
-      successMessage: "Cadastro ok! Abrindo o WhatsApp com 15%...",
-      onSuccess: function () {
-        markPromoSeen();
-        trackEvent("whatsapp_budget_click", {
-          cta_label: "popup-desconto-15-com-cadastro",
-          discount: "15",
-        });
-        openWhatsApp(WHATSAPP_15);
-        window.setTimeout(function () {
-          closePromoPopup(true);
-        }, 600);
-      },
-    });
   }
 
   const whatsappButtons = document.querySelectorAll("[data-whatsapp-cta]");
