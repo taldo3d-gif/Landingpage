@@ -1,22 +1,12 @@
 (function () {
-  const PROMO_POPUP_STORAGE_KEY = "taldo-promo-popup-seen";
-  const PROMO_POPUP_DELAY_MS = 2500;
   const DOUBT_BUBBLE_STORAGE_KEY = "taldo-doubt-bubble-dismissed";
-  const DOUBT_BUBBLE_DELAY_MS = 5 * 60 * 1000;
+  const DOUBT_BUBBLE_DELAY_MS = 3 * 60 * 1000;
   const DOUBT_BUBBLE_TEST_DELAY_MS = 2000;
   function getUrlParam(name) {
     try {
       return new URLSearchParams(window.location.search).get(name);
     } catch (error) {
       return null;
-    }
-  }
-
-  function markPromoSeen() {
-    try {
-      window.localStorage.setItem(PROMO_POPUP_STORAGE_KEY, "1");
-    } catch (error) {
-      // Ignore storage errors in private mode or restricted browsers.
     }
   }
 
@@ -150,84 +140,9 @@
     });
   }
 
-  const promoPopup = document.getElementById("promo-popup");
-
-  if (promoPopup) {
-    const closeButton = promoPopup.querySelector(".promo-popup-close");
-    const dismissButton = promoPopup.querySelector(".promo-popup-dismiss");
-    const skipLink = promoPopup.querySelector(".promo-popup-skip");
-    const dialog = promoPopup.querySelector(".promo-popup-dialog");
-    let popupTimerId = null;
-
-    function closePromoPopup(markAsSeen) {
-      if (popupTimerId !== null) {
-        window.clearTimeout(popupTimerId);
-        popupTimerId = null;
-      }
-
-      promoPopup.hidden = true;
-      promoPopup.setAttribute("aria-hidden", "true");
-
-      if (markAsSeen) {
-        markPromoSeen();
-      }
-    }
-
-    function openPromoPopup() {
-      promoPopup.hidden = false;
-      promoPopup.setAttribute("aria-hidden", "false");
-    }
-
-    function shouldShowPromoPopup() {
-      try {
-        return !window.localStorage.getItem(PROMO_POPUP_STORAGE_KEY);
-      } catch (error) {
-        return true;
-      }
-    }
-
-    if (shouldShowPromoPopup()) {
-      popupTimerId = window.setTimeout(openPromoPopup, PROMO_POPUP_DELAY_MS);
-    }
-
-    closeButton.addEventListener("click", () => closePromoPopup(true));
-    dismissButton.addEventListener("click", () => closePromoPopup(true));
-
-    if (skipLink) {
-      skipLink.addEventListener("click", () => {
-        markPromoSeen();
-        trackEvent("whatsapp_budget_click", {
-          cta_label: "popup-desconto-10",
-          discount: "10",
-        });
-      });
-    }
-
-    promoPopup.addEventListener("click", (event) => {
-      if (event.target === promoPopup) {
-        closePromoPopup(true);
-      }
-    });
-
-    dialog.addEventListener("click", (event) => {
-      event.stopPropagation();
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && !promoPopup.hidden) {
-        closePromoPopup(true);
-      }
-    });
-
-  }
-
   const whatsappButtons = document.querySelectorAll("[data-whatsapp-cta]");
 
   whatsappButtons.forEach((button) => {
-    if (button.classList.contains("promo-popup-skip")) {
-      return;
-    }
-
     button.addEventListener("click", () => {
       trackEvent("whatsapp_budget_click", {
         cta_label: button.dataset.ctaLabel || "sem-label",
