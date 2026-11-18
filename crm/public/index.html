@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1b2836">
+    <title>CRM WhatsApp — Taldo Studio 3D</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b2836'/%3E%3Cpath d='M16 6.5 25 11.5V21L16 26 7 21V11.5Z' fill='none' stroke='%233ec4ef' stroke-width='1.6'/%3E%3Cpath d='M16 6.5V16.2L25 11.5M16 16.2 7 11.5M16 16.2V26' fill='none' stroke='%233ec4ef' stroke-width='1.6'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#/">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M16 4.5 27 10.5V21.5L16 27.5 5 21.5V10.5Z"></path>
+          <path d="M16 4.5V16.2 27.5M16 16.2 27 10.5M16 16.2 5 10.5"></path>
+        </svg>
+        <span>
+          <small>Taldo Studio 3D</small>
+          <strong>CRM de conversas</strong>
+        </span>
+      </a>
+      <form id="search-form" class="search" role="search">
+        <label class="sr-only" for="search">Buscar clientes</label>
+        <input id="search" type="search" placeholder="Buscar por nome, número ou assunto" autocomplete="off">
+      </form>
+      <nav class="top-nav" aria-label="Seções">
+        <a class="top-link" href="#/">Painel</a>
+        <a class="top-link primary" href="#/novo">Novo cliente</a>
+      </nav>
+    </header>
+    <p id="status" role="status"></p>
+    <main id="main"></main>
+    <noscript>
+      <p class="noscript">Ative o JavaScript para usar o CRM.</p>
+    </noscript>
+    <script src="/app.js"></script>
+  </body>
+</html>
