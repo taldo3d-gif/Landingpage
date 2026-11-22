@@ -1,0 +1,13 @@
+{
+  "name": "taldo-crm-whatsapp",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CRM privado de WhatsApp do Taldo Studio 3D",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/api.test.js"
+  }
+}
