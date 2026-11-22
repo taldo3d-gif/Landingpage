@@ -40,6 +40,31 @@ test("telefone brasileiro e valores em reais", () => {
   assert.throws(() => normalizeWhatsapp("123"), /não parece válido/);
 });
 
+test("sem PORT escuta em 127.0.0.1; com PORT escuta em 0.0.0.0", async () => {
+  const previous = process.env.PORT;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "taldo-crm-"));
+  delete process.env.PORT;
+  const local = await startServer({ dbPath: path.join(dir, "local.sqlite"), port: 0 });
+  try {
+    assert.equal(local.host, "127.0.0.1");
+    assert.equal(local.server.address().address, "127.0.0.1");
+  } finally {
+    await local.close();
+  }
+
+  process.env.PORT = "4173";
+  const exposed = await startServer({ dbPath: path.join(dir, "exposed.sqlite"), port: 0 });
+  try {
+    assert.equal(exposed.host, "0.0.0.0");
+    assert.equal(exposed.server.address().address, "0.0.0.0");
+  } finally {
+    await exposed.close();
+    if (previous === undefined) delete process.env.PORT;
+    else process.env.PORT = previous;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("a interface fala português", () => {
   const html = fs.readFileSync(path.join(__dirname, "../public/index.html"), "utf8");
   const app = fs.readFileSync(path.join(__dirname, "../public/app.js"), "utf8");
