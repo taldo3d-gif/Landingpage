@@ -2,6 +2,14 @@
   const DOUBT_BUBBLE_STORAGE_KEY = "taldo-doubt-bubble-dismissed";
   const DOUBT_BUBBLE_DELAY_MS = 3 * 60 * 1000;
   const DOUBT_BUBBLE_TEST_DELAY_MS = 2000;
+  const WHATSAPP_BASE = "https://wa.me/5511910634551?text=";
+  const ORIGIN_STORAGE_KEY = "taldo-origem";
+  const ORIGIN_MESSAGES = {
+    google_brindes:
+      "Olá! Vim pelo Google [BRINDES] e quero um orçamento de brindes corporativos em 3D.",
+    google_3d: "Olá! Vim pelo Google [3D] e quero um orçamento de impressão 3D.",
+  };
+
   function getUrlParam(name) {
     try {
       return new URLSearchParams(window.location.search).get(name);
@@ -10,13 +18,68 @@
     }
   }
 
+  function isKnownOrigem(value) {
+    return Boolean(value && Object.prototype.hasOwnProperty.call(ORIGIN_MESSAGES, value));
+  }
+
+  function readStoredOrigem() {
+    try {
+      return window.sessionStorage.getItem(ORIGIN_STORAGE_KEY);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function storeOrigem(value) {
+    try {
+      window.sessionStorage.setItem(ORIGIN_STORAGE_KEY, value);
+    } catch (error) {
+      // Ignore storage errors in private mode or restricted browsers.
+    }
+  }
+
+  function resolveOrigem() {
+    const fromUrl = getUrlParam("origem");
+    if (isKnownOrigem(fromUrl)) {
+      storeOrigem(fromUrl);
+      return fromUrl;
+    }
+
+    const stored = readStoredOrigem();
+    return isKnownOrigem(stored) ? stored : null;
+  }
+
+  const currentOrigem = resolveOrigem();
+
+  function getOriginMessage() {
+    return currentOrigem ? ORIGIN_MESSAGES[currentOrigem] : null;
+  }
+
+  function applyOriginToWhatsAppLinks() {
+    const message = getOriginMessage();
+    if (!message) {
+      return;
+    }
+
+    document.querySelectorAll('a[href*="wa.me/"]').forEach((link) => {
+      try {
+        const url = new URL(link.href, window.location.origin);
+        url.searchParams.set("text", message);
+        link.href = url.toString();
+      } catch (error) {
+        link.href = WHATSAPP_BASE + encodeURIComponent(message);
+      }
+    });
+  }
+
   function trackEvent(eventName, payload) {
     const eventPayload = Object.assign(
       {
         event: eventName,
         page_location: window.location.href,
       },
-      payload || {}
+      payload || {},
+      currentOrigem ? { origem: currentOrigem } : {}
     );
 
     window.dataLayer = window.dataLayer || [];
@@ -139,6 +202,8 @@
       }
     });
   }
+
+  applyOriginToWhatsAppLinks();
 
   const whatsappButtons = document.querySelectorAll("[data-whatsapp-cta]");
 
