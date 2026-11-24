@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const {
   openDatabase,
+  openMemoryDatabase,
   listClients,
   requireClient,
   createClient,
@@ -13,7 +14,6 @@ const {
   deleteQuote,
 } = require("./lib/db");
 
-const PUBLIC_DIR = path.join(__dirname, "public");
 const DEFAULT_DB = path.join(__dirname, "data", "taldo.sqlite");
 const STATIC_FILES = new Map([
   ["/", "index.html"],
@@ -26,6 +26,8 @@ const CONTENT_TYPES = {
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
 };
+const CSP =
+  "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 
 function httpError(status, message) {
   const error = new Error(message);
@@ -33,33 +35,19 @@ function httpError(status, message) {
   return error;
 }
 
-function sendJson(res, status, body) {
-  const payload = JSON.stringify(body);
-  res.writeHead(status, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Content-Length": Buffer.byteLength(payload),
-    "Cache-Control": "no-store",
+function securityHeaders() {
+  return {
     "X-Content-Type-Options": "nosniff",
     "X-Robots-Tag": "noindex, nofollow",
     "Referrer-Policy": "no-referrer",
-  });
-  res.end(payload);
+  };
 }
 
-function sendFile(res, filePath) {
-  const body = fs.readFileSync(filePath);
-  const type = CONTENT_TYPES[path.extname(filePath)] || "application/octet-stream";
-  res.writeHead(200, {
-    "Content-Type": type,
-    "Content-Length": body.length,
-    "Cache-Control": "no-cache",
-    "Content-Security-Policy":
-      "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
-    "X-Content-Type-Options": "nosniff",
-    "X-Robots-Tag": "noindex, nofollow",
-    "Referrer-Policy": "no-referrer",
-  });
-  res.end(body);
+function readPublicFile(name) {
+  if (name === "index.html") return fs.readFileSync(path.join(__dirname, "public", "index.html"));
+  if (name === "styles.css") return fs.readFileSync(path.join(__dirname, "public", "styles.css"));
+  if (name === "app.js") return fs.readFileSync(path.join(__dirname, "public", "app.js"));
+  return null;
 }
 
 function readJson(req) {
@@ -99,6 +87,23 @@ function readJson(req) {
   });
 }
 
+async function readWebBody(request) {
+  const raw = await request.text();
+  if (Buffer.byteLength(raw) > 65_536) throw httpError(413, "Os dados enviados são grandes demais.");
+  const trimmed = raw.trim();
+  if (!trimmed) return {};
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw httpError(400, "Envie um objeto JSON.");
+    }
+    return parsed;
+  } catch (error) {
+    if (error.status) throw error;
+    throw httpError(400, "Não entendi o JSON enviado.");
+  }
+}
+
 function parseId(value) {
   if (!/^\d+$/.test(value)) return null;
   const id = Number(value);
@@ -106,99 +111,182 @@ function parseId(value) {
   return id;
 }
 
-async function handle(req, res, db) {
-  const url = new URL(req.url, "http://127.0.0.1");
+function jsonResult(status, json) {
+  return { type: "json", status, json };
+}
+
+async function dispatch(db, method, url, readBody) {
   const pathname = url.pathname.replace(/\/+$/, "") || "/";
 
-  if (pathname === "/favicon.ico") {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
+  if (pathname === "/favicon.ico") return { type: "empty", status: 204 };
 
   const staticName = STATIC_FILES.get(pathname);
-  if (req.method === "GET" && staticName) {
-    sendFile(res, path.join(PUBLIC_DIR, staticName));
-    return;
+  if (method === "GET" && staticName) {
+    const body = readPublicFile(staticName);
+    if (!body) return jsonResult(404, { error: "Não encontrado." });
+    return {
+      type: "file",
+      status: 200,
+      body,
+      contentType: CONTENT_TYPES[path.extname(staticName)] || "application/octet-stream",
+    };
   }
 
-  if (pathname === "/api/health" && req.method === "GET") {
-    sendJson(res, 200, { ok: true });
-    return;
+  if (pathname === "/api/health" && method === "GET") {
+    return jsonResult(200, { ok: true, storage: db.storage() });
   }
 
-  if (pathname === "/api/clients" && req.method === "GET") {
-    sendJson(res, 200, listClients(db, url.searchParams.get("q") || ""));
-    return;
+  if (pathname === "/api/clients" && method === "GET") {
+    return jsonResult(200, await listClients(db, url.searchParams.get("q") || ""));
   }
 
-  if (pathname === "/api/clients" && req.method === "POST") {
-    sendJson(res, 201, createClient(db, await readJson(req)));
-    return;
+  if (pathname === "/api/clients" && method === "POST") {
+    return jsonResult(201, await createClient(db, await readBody()));
   }
 
   const clientMatch = pathname.match(/^\/api\/clients\/(\d+)$/);
   if (clientMatch) {
     const id = parseId(clientMatch[1]);
     if (!id) throw httpError(404, "Cliente não encontrado.");
-    if (req.method === "GET") {
-      sendJson(res, 200, requireClient(db, id));
-      return;
-    }
-    if (req.method === "PATCH") {
-      const updated = updateClient(db, id, await readJson(req));
+    if (method === "GET") return jsonResult(200, await requireClient(db, id));
+    if (method === "PATCH") {
+      const updated = await updateClient(db, id, await readBody());
       if (!updated) throw httpError(404, "Cliente não encontrado.");
-      sendJson(res, 200, updated);
-      return;
+      return jsonResult(200, updated);
     }
-    if (req.method === "DELETE") {
-      if (!deleteClient(db, id)) throw httpError(404, "Cliente não encontrado.");
-      sendJson(res, 200, { ok: true });
-      return;
+    if (method === "DELETE") {
+      if (!(await deleteClient(db, id))) throw httpError(404, "Cliente não encontrado.");
+      return jsonResult(200, { ok: true });
     }
   }
 
   const quoteCreateMatch = pathname.match(/^\/api\/clients\/(\d+)\/quotes$/);
-  if (quoteCreateMatch && req.method === "POST") {
+  if (quoteCreateMatch && method === "POST") {
     const id = parseId(quoteCreateMatch[1]);
     if (!id) throw httpError(404, "Cliente não encontrado.");
-    const quote = createQuote(db, id, await readJson(req));
+    const quote = await createQuote(db, id, await readBody());
     if (!quote) throw httpError(404, "Cliente não encontrado.");
-    sendJson(res, 201, quote);
-    return;
+    return jsonResult(201, quote);
   }
 
   const quoteMatch = pathname.match(/^\/api\/quotes\/(\d+)$/);
   if (quoteMatch) {
     const id = parseId(quoteMatch[1]);
     if (!id) throw httpError(404, "Orçamento não encontrado.");
-    if (req.method === "PATCH") {
-      const quote = updateQuote(db, id, await readJson(req));
+    if (method === "PATCH") {
+      const quote = await updateQuote(db, id, await readBody());
       if (!quote) throw httpError(404, "Orçamento não encontrado.");
-      sendJson(res, 200, quote);
-      return;
+      return jsonResult(200, quote);
     }
-    if (req.method === "DELETE") {
-      if (!deleteQuote(db, id)) throw httpError(404, "Orçamento não encontrado.");
-      sendJson(res, 200, { ok: true });
-      return;
+    if (method === "DELETE") {
+      if (!(await deleteQuote(db, id))) throw httpError(404, "Orçamento não encontrado.");
+      return jsonResult(200, { ok: true });
     }
   }
 
-  if (pathname.startsWith("/api/")) throw httpError(404, "Não encontrado.");
   throw httpError(404, "Não encontrado.");
 }
 
-function startServer({ dbPath = DEFAULT_DB, host = "127.0.0.1", port = Number(process.env.PORT || 4173) } = {}) {
-  const db = openDatabase(dbPath);
-  const server = http.createServer((req, res) => {
-    handle(req, res, db).catch((error) => {
-      const status = error.status || 500;
-      if (status === 500) console.error(error);
-      if (res.headersSent || res.destroyed) return;
-      const message = status === 500 ? "Algo deu errado. Tente de novo." : error.message;
-      sendJson(res, status, { error: message });
+function sendResult(res, result) {
+  if (result.type === "empty") {
+    res.writeHead(result.status, securityHeaders());
+    res.end();
+    return;
+  }
+  if (result.type === "file") {
+    res.writeHead(result.status, {
+      "Content-Type": result.contentType,
+      "Content-Length": result.body.length,
+      "Cache-Control": "no-cache",
+      "Content-Security-Policy": CSP,
+      ...securityHeaders(),
     });
+    res.end(result.body);
+    return;
+  }
+  const payload = JSON.stringify(result.json);
+  res.writeHead(result.status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": Buffer.byteLength(payload),
+    "Cache-Control": "no-store",
+    ...securityHeaders(),
+  });
+  res.end(payload);
+}
+
+function resultToResponse(result) {
+  if (result.type === "empty") {
+    return new Response(null, { status: result.status, headers: securityHeaders() });
+  }
+  if (result.type === "file") {
+    return new Response(result.body, {
+      status: result.status,
+      headers: {
+        "Content-Type": result.contentType,
+        "Cache-Control": "no-cache",
+        "Content-Security-Policy": CSP,
+        ...securityHeaders(),
+      },
+    });
+  }
+  return new Response(JSON.stringify(result.json), {
+    status: result.status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+      ...securityHeaders(),
+    },
+  });
+}
+
+function errorResponse(error) {
+  const status = error.status || 500;
+  if (status === 500) console.error(error);
+  const message = status === 500 ? "Algo deu errado. Tente de novo." : error.message;
+  return jsonResult(status, { error: message });
+}
+
+async function handleRequest(request, db) {
+  const url = new URL(request.url);
+  try {
+    const result = await dispatch(db, request.method, url, () => readWebBody(request));
+    return resultToResponse(result);
+  } catch (error) {
+    return resultToResponse(errorResponse(error));
+  }
+}
+
+// The host imports this file and calls the web handlers. It has no durable
+// SQLite file, and loading experimental node:sqlite crashes the function.
+// `npm start` still opens crm/data/taldo.sqlite below.
+let hostDb;
+function hostDatabase() {
+  if (!hostDb) hostDb = openMemoryDatabase();
+  return hostDb;
+}
+
+function hostHandler(request) {
+  return handleRequest(request, hostDatabase());
+}
+
+function startServer({
+  dbPath = DEFAULT_DB,
+  host = "127.0.0.1",
+  port = Number(process.env.PORT || 4173),
+  memory = false,
+} = {}) {
+  const db = memory ? openMemoryDatabase() : openDatabase(dbPath);
+  const server = http.createServer((req, res) => {
+    const url = new URL(req.url, "http://127.0.0.1");
+    dispatch(db, req.method, url, () => readJson(req))
+      .then((result) => {
+        if (res.headersSent || res.destroyed) return;
+        sendResult(res, result);
+      })
+      .catch((error) => {
+        if (res.headersSent || res.destroyed) return;
+        sendResult(res, errorResponse(error));
+      });
   });
 
   return new Promise((resolve, reject) => {
@@ -249,4 +337,12 @@ if (require.main === module) {
     });
 }
 
-module.exports = { startServer };
+module.exports = {
+  startServer,
+  handleRequest,
+  GET: hostHandler,
+  POST: hostHandler,
+  PATCH: hostHandler,
+  DELETE: hostHandler,
+  fetch: hostHandler,
+};
