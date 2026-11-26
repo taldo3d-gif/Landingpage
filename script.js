@@ -1,6 +1,6 @@
 (function () {
   const DOUBT_BUBBLE_STORAGE_KEY = "taldo-doubt-bubble-dismissed";
-  const DOUBT_BUBBLE_DELAY_MS = 3 * 60 * 1000;
+  const DOUBT_BUBBLE_DELAY_MS = 2 * 60 * 1000;
   const DOUBT_BUBBLE_TEST_DELAY_MS = 2000;
   const WHATSAPP_BASE = "https://wa.me/5511910634551?text=";
   const ORIGIN_STORAGE_KEY = "taldo-origem";
