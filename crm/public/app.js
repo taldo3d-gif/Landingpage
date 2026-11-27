@@ -11,6 +11,7 @@ const searchForm = document.querySelector("#search-form");
 const searchInput = document.querySelector("#search");
 
 let dashboard = null;
+let storageInfo = null;
 let filter = "";
 let searchSeq = 0;
 let detailSeq = 0;
@@ -103,6 +104,25 @@ function whatsappLink(client) {
   );
 }
 
+function storageBanner() {
+  if (!storageInfo || storageInfo.persistent || !storageInfo.message) return null;
+  return h("p", { class: "storage-note" }, storageInfo.message);
+}
+
+function rememberStorage(storage) {
+  if (storage) storageInfo = storage;
+}
+
+async function ensureStorage() {
+  if (storageInfo) return;
+  try {
+    const health = await api("/api/health");
+    rememberStorage(health.storage);
+  } catch {
+    /* o painel segue mesmo sem o aviso */
+  }
+}
+
 function renderStats(summary) {
   return h(
     "section",
@@ -153,6 +173,8 @@ function renderCard(client) {
 
 function renderDashboard() {
   main.replaceChildren();
+  const banner = storageBanner();
+  if (banner) main.append(banner);
   if (!dashboard || dashboard.summary.clients === 0) {
     main.append(
       h(
@@ -233,6 +255,7 @@ async function showNew() {
   searchForm.hidden = true;
   document.title = "Novo cliente — CRM Taldo";
   setStatus("");
+  await ensureStorage();
   const form = h("form", { class: "stack" });
   const button = h("button", { class: "button-primary", type: "submit" }, "Salvar cliente");
   form.append(clientFields(null), h("div", { class: "form-actions" }, button));
@@ -256,7 +279,9 @@ async function showNew() {
       setStatus(error.message, true);
     }
   });
+  const banner = storageBanner();
   main.replaceChildren(
+    ...(banner ? [banner] : []),
     h(
       "section",
       { class: "panel" },
@@ -460,7 +485,9 @@ function renderDetail(client) {
     ? h("ul", { class: "quote-list" }, client.quotes.map((quote) => renderQuote(quote, client)))
     : h("p", { class: "quiet" }, "Nenhum orçamento ainda.");
 
+  const banner = storageBanner();
   main.replaceChildren(
+    ...(banner ? [banner] : []),
     h(
       "div",
       { class: "detail-grid" },
@@ -497,6 +524,7 @@ async function showDetail(id, options = {}) {
     main.replaceChildren(h("p", { class: "quiet" }, "Carregando ficha…"));
   }
   try {
+    await ensureStorage();
     const client = await api(`/api/clients/${id}`);
     if (seq !== detailSeq || document.body.dataset.view !== "detail") return;
     renderDetail(client);
@@ -518,6 +546,7 @@ async function showDashboard(options = {}) {
     const next = await api(`/api/clients?q=${encodeURIComponent(filter)}`);
     if (seq !== searchSeq || document.body.dataset.view !== "dashboard") return;
     dashboard = next;
+    rememberStorage(next.storage);
     document.title = "Painel — CRM Taldo";
     renderDashboard();
   } catch (error) {

@@ -2,7 +2,7 @@
 
 CRM privado, de uma pessoa só, para o estúdio guardar quem chamou no WhatsApp, o assunto da conversa e os orçamentos ligados a esse cliente.
 
-A landing page do site não muda. O CRM fica nesta pasta e roda na sua máquina. Ele não entra no deploy da Vercel.
+A landing page do site não muda. O CRM fica nesta pasta. Na sua máquina ele grava em SQLite. No app publicado, o hosting chama uma função web e não consegue guardar o SQLite.
 
 ## O que faz
 
@@ -30,6 +30,12 @@ Outra porta, se a 4173 estiver ocupada:
 PORT=4180 npm start
 ```
 
+## App publicado
+
+O hosting do Cursor constrói esta pasta e chama `GET`, `POST`, `PATCH` e `DELETE` em `server.js`. Ele não sobe o processo que faz `listen`, e o `node:sqlite` experimental derruba a função. Por isso a função publicada não abre o arquivo SQLite.
+
+O painel, a ficha e os orçamentos abrem do mesmo jeito. Os dados dessa instância ficam só na memória: somem quando ela reinicia. O painel avisa isso em português. Na sua máquina, `npm start` continua gravando em `crm/data/taldo.sqlite`.
+
 ## Testes
 
 ```bash
@@ -39,6 +45,6 @@ npm test
 
 ## O que não entra nesta versão
 
-- Vários usuários, login ou permissões.
+- Vários usuários, login ou permissões dentro do próprio CRM. O app privado do Cursor já pede a conta de quem abre.
 - API oficial do WhatsApp Business, envio automático ou histórico da conversa.
-- Publicação na internet. O app é local; a landing continua sendo o único site público.
+- Banco durável no app publicado. O hosting não persiste o SQLite.

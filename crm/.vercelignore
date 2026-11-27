@@ -1,0 +1,4 @@
+# O projeto Vercel do CRM usa Root Directory = crm.
+# Este arquivo tem prioridade sobre o .vercelignore da raiz,
+# que ignora a pasta crm para a landing não publicar o app.
+data

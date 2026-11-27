@@ -320,6 +320,15 @@ textarea { min-height: 110px; resize: vertical; }
 }
 .confirm p { margin: 0 0 10px; }
 
+.storage-note {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid #ead7a1;
+  border-radius: 14px;
+  background: #fff6df;
+  color: #6d5314;
+}
+
 .empty { padding: 32px 28px; }
 .empty p { max-width: 52ch; }
 
