@@ -1,5 +1,6 @@
 const http = require("node:http");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const {
   openDatabase,
@@ -13,8 +14,7 @@ const {
   deleteQuote,
 } = require("./lib/db");
 
-const PUBLIC_DIR = path.join(__dirname, "public");
-const DEFAULT_DB = path.join(__dirname, "data", "taldo.sqlite");
+const PREFERRED_DB = path.join(__dirname, "data", "taldo.sqlite");
 const STATIC_FILES = new Map([
   ["/", "index.html"],
   ["/index.html", "index.html"],
@@ -46,9 +46,17 @@ function sendJson(res, status, body) {
   res.end(payload);
 }
 
-function sendFile(res, filePath) {
-  const body = fs.readFileSync(filePath);
-  const type = CONTENT_TYPES[path.extname(filePath)] || "application/octet-stream";
+function readPublicFile(name) {
+  if (name === "index.html") return fs.readFileSync(path.join(__dirname, "public", "index.html"));
+  if (name === "styles.css") return fs.readFileSync(path.join(__dirname, "public", "styles.css"));
+  if (name === "app.js") return fs.readFileSync(path.join(__dirname, "public", "app.js"));
+  return null;
+}
+
+function sendPublicFile(res, name) {
+  const body = readPublicFile(name);
+  if (!body) return false;
+  const type = CONTENT_TYPES[path.extname(name)] || "application/octet-stream";
   res.writeHead(200, {
     "Content-Type": type,
     "Content-Length": body.length,
@@ -60,6 +68,7 @@ function sendFile(res, filePath) {
     "Referrer-Policy": "no-referrer",
   });
   res.end(body);
+  return true;
 }
 
 function readJson(req) {
@@ -118,7 +127,7 @@ async function handle(req, res, db) {
 
   const staticName = STATIC_FILES.get(pathname);
   if (req.method === "GET" && staticName) {
-    sendFile(res, path.join(PUBLIC_DIR, staticName));
+    if (!sendPublicFile(res, staticName)) throw httpError(404, "Não encontrado.");
     return;
   }
 
@@ -189,7 +198,39 @@ async function handle(req, res, db) {
   throw httpError(404, "Não encontrado.");
 }
 
-function startServer({ dbPath = DEFAULT_DB, host = "127.0.0.1", port = Number(process.env.PORT || 4173) } = {}) {
+function listenPort() {
+  if (!process.env.PORT) return 4173;
+  const port = Number(process.env.PORT);
+  if (!Number.isInteger(port) || port < 0 || port > 65535) {
+    const error = new Error(`PORT inválida: ${process.env.PORT}`);
+    error.code = "EINVAL";
+    throw error;
+  }
+  return port;
+}
+
+function listenHost() {
+  return process.env.PORT ? "0.0.0.0" : "127.0.0.1";
+}
+
+function defaultDatabasePath() {
+  const dir = path.dirname(PREFERRED_DB);
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    const probe = path.join(dir, ".write-probe");
+    fs.writeFileSync(probe, "1");
+    fs.rmSync(probe, { force: true });
+    return PREFERRED_DB;
+  } catch (error) {
+    const fallback = path.join(os.tmpdir(), "taldo-crm.sqlite");
+    console.warn(
+      `Não dá para gravar o SQLite em ${PREFERRED_DB} (${error.code || error.message}). Usando ${fallback}. Na Vercel esse arquivo some no restart.`
+    );
+    return fallback;
+  }
+}
+
+function startServer({ dbPath = defaultDatabasePath(), host = listenHost(), port = listenPort() } = {}) {
   const db = openDatabase(dbPath);
   const server = http.createServer((req, res) => {
     handle(req, res, db).catch((error) => {
@@ -229,7 +270,7 @@ function startServer({ dbPath = DEFAULT_DB, host = "127.0.0.1", port = Number(pr
   });
 }
 
-if (require.main === module) {
+if (require.main === module || (process.env.VERCEL && process.env.PORT)) {
   const [major, minor] = process.versions.node.split(".").map(Number);
   if (major < 22 || (major === 22 && minor < 13)) {
     console.error(`O CRM precisa do Node.js 22.13 ou mais novo. Versão atual: ${process.versions.node}`);

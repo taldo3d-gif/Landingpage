@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "CRM privado de WhatsApp do Taldo Studio 3D",
+  "main": "server.js",
   "engines": {
     "node": ">=22.13"
   },

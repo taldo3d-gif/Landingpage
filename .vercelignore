@@ -1,2 +1,5 @@
-# CRM local e privado. Não entra no deploy da landing.
-crm
+# Não ignore a pasta crm.
+# O CRM é um projeto Vercel à parte, com Root Directory = crm.
+# O padrão "crm" apagava server.js, package.json, public/ e lib/
+# antes desse build, e a Vercel falhava sem entrypoint em /vercel/path0/crm.
+# A landing segue no deploy da raiz. O banco dos clientes não está no git.
